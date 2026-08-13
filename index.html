@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WATCHATHON - A Movie Watchlist & Discover Engine</title>
+    <meta name="description"
+        content="A cyberpunk-themed Movie Watchlist web application powered by TMDB API and LocalStorage CRUD operations.">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+    <div class="app-container">
+        <!-- Header & Main Navigation -->
+        <header class="cyber-header">
+            <a href="#" class="brand-logo" id="logoLink">
+                <div class="logo-icon"><i class="fa-solid fa-play"></i></div>
+                <div class="logo-text">WATCHATHON</div>
+            </a>
+
+            <!-- Multi-Page View Navigation Tabs -->
+            <nav class="cyber-nav">
+                <button class="nav-btn active" data-view="discover-view">
+                    <i class="fa-solid fa-compass"></i> Discover
+                </button>
+                <button class="nav-btn" data-view="watchlist-view">
+                    <i class="fa-solid fa-bookmark"></i> My Watchlist (<span id="navWatchlistCount">0</span>)
+                </button>
+                <button class="nav-btn" data-view="stats-view">
+                    <i class="fa-solid fa-chart-pie"></i> Stats & Analytics
+                </button>
+                <button class="nav-btn" data-view="guide-view">
+                    <i class="fa-solid fa-graduation-cap"></i> Presentation Guide
+                </button>
+            </nav>
+
+            <!-- API Mode Status Badge & Settings Trigger -->
+            <div class="header-actions">
+                <div class="api-status-badge" id="openApiModalBtn" title="Click to configure TMDB API Key">
+                    <span class="status-dot demo-mode" id="apiStatusDot"></span>
+                    <span id="apiStatusText">Demo Mode</span>
+                    <i class="fa-solid fa-gear" style="margin-left: 4px; color: var(--text-muted);"></i>
+                </div>
+            </div>
+        </header>
+
+        <!-- MAIN CONTENT CONTAINER -->
+        <main id="mainContent">
+
+            <!-- ================= VIEW 1: DISCOVER & SEARCH ================= -->
+            <section id="discover-view" class="view-section">
+                <!-- Hero Search Banner -->
+                <div class="hero-section">
+                    <h1 class="hero-title">DISCOVER CINEMATIC WORLDS</h1>
+                    <p class="hero-subtitle">Search millions of movies via TMDB API or explore our pre-seeded cyberpunk
+                        collection. Add any movie directly to your personal Watchlist.</p>
+
+                    <div class="search-box-wrapper">
+                        <div class="search-input-group">
+                            <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                            <input type="text" id="tmdbSearchInput" class="cyber-input"
+                                placeholder="Search movies by title, keyword, or actor (e.g. Blade Runner, Matrix, Dune)...">
+                        </div>
+                        <button class="cyber-btn cyber-btn-primary" id="tmdbSearchBtn">
+                            <i class="fa-solid fa-bolt"></i> Search TMDB
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Section Toolbar -->
+                <div class="section-toolbar">
+                    <h2 class="section-title" id="discoverResultsTitle">Popular & Trending Cyber-Selection</h2>
+                    <div class="filter-group" id="genreFilterGroup">
+                        <!-- Dynamic Genre Tags generated via JS -->
+                    </div>
+                </div>
+
+                <!-- Discover Cards Grid -->
+                <div class="movie-grid" id="discoverGrid">
+                    <!-- Movie Cards injected dynamically by app.js -->
+                </div>
+            </section>
+
+
+            <!-- ================= VIEW 2: MY WATCHLIST ================= -->
+            <section id="watchlist-view" class="view-section" style="display: none;">
+                <div class="hero-section" style="padding: 28px 30px;">
+                    <h1 class="hero-title" style="font-size: 1.8rem;">MY PERSONAL WATCHLIST</h1>
+                    <p class="hero-subtitle">Manage, rate, review, and filter your saved movie collection. Synced
+                        automatically with LocalStorage.</p>
+
+                    <div class="search-box-wrapper">
+                        <div class="search-input-group">
+                            <i class="fa-solid fa-filter search-icon"></i>
+                            <input type="text" id="watchlistLocalSearch" class="cyber-input"
+                                placeholder="Filter saved movies by title, notes, or genre...">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Watchlist Controls Bar -->
+                <div class="section-toolbar">
+                    <!-- Status Filter Tabs -->
+                    <div class="filter-group">
+                        <button class="filter-badge active" data-status-filter="ALL">All Movies</button>
+                        <button class="filter-badge" data-status-filter="Plan to Watch">Plan to Watch</button>
+                        <button class="filter-badge" data-status-filter="Watching">Watching</button>
+                        <button class="filter-badge" data-status-filter="Completed">Completed</button>
+                    </div>
+
+                    <!-- Sort Dropdown -->
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <label for="watchlistSort" style="font-size: 0.82rem; color: var(--text-muted);">Sort
+                            By:</label>
+                        <select id="watchlistSort" class="cyber-select">
+                            <option value="dateAdded">Date Added (Newest)</option>
+                            <option value="personalRating">Personal Rating (High to Low)</option>
+                            <option value="tmdbRating">TMDB Score (High to Low)</option>
+                            <option value="title">Title (A - Z)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Watchlist Cards Grid -->
+                <div class="movie-grid" id="watchlistGrid">
+                    <!-- Watchlist items rendered dynamically -->
+                </div>
+            </section>
+
+
+            <!-- ================= VIEW 3: STATS & ANALYTICS ================= -->
+            <section id="stats-view" class="view-section" style="display: none;">
+                <div class="section-toolbar">
+                    <h2 class="section-title">WATCHLIST ANALYTICS & STATS</h2>
+                </div>
+
+                <!-- Key Stat Metrics Cards -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number" id="statTotalMovies">0</div>
+                        <div class="stat-label">Total Saved Movies</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="statCompletedMovies" style="color: var(--status-completed);">0
+                        </div>
+                        <div class="stat-label">Movies Completed</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="statAvgRating" style="color: var(--star-gold);">0.0 ★</div>
+                        <div class="stat-label">Avg Personal Rating</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="statHoursEstimated" style="color: var(--secondary-purple);">0 hrs
+                        </div>
+                        <div class="stat-label">Est. Watch Time</div>
+                    </div>
+                </div>
+
+                <!-- Detailed Breakdown Box -->
+                <div class="guide-card">
+                    <h3 class="guide-subtitle"><i class="fa-solid fa-chart-bar"></i> Watch Status Breakdown</h3>
+                    <div id="statusBreakdownContainer" style="margin-top: 15px;">
+                        <!-- Injected via app.js -->
+                    </div>
+                </div>
+            </section>
+
+
+            <!-- ================= VIEW 4: PRESENTATION GUIDE ================= -->
+            <section id="guide-view" class="view-section" style="display: none;">
+                <div class="section-toolbar">
+                    <h2 class="section-title">ASSIGNMENT PRESENTATION & CODE GUIDE</h2>
+                </div>
+
+                <div class="guide-card">
+                    <h3 class="guide-subtitle"><i class="fa-solid fa-code"></i> Core Architecture & Concepts Explained
+                    </h3>
+                    <p style="margin-bottom: 16px; color: var(--text-muted);">This application was constructed using
+                        clean Vanilla JavaScript, standard HTML5 semantics, and CSS Glassmorphism to fulfill all
+                        academic project requirements.</p>
+
+                    <div style="display: grid; gap: 20px;">
+                        <div>
+                            <h4 style="color: var(--primary-cyan); margin-bottom: 6px;">1. Asynchronous TMDB API
+                                Integration (`fetch` & `async/await`)</h4>
+                            <p style="font-size: 0.9rem; color: var(--text-muted);">The app connects to TMDB's RESTful
+                                search endpoint using native JavaScript `fetch()` wrapped inside an `async/await`
+                                try-catch block for clean asynchronous network calls.</p>
+                            <div class="code-snippet-box">
+                                async function searchMoviesFromTMDB(query) {
+                                const url =
+                                `https://api.themoviedb.org/3/search/movie?api_key=${API_KEY}&query=${encodeURIComponent(query)}`;
+                                const response = await fetch(url);
+                                const data = await response.json();
+                                return data.results; // Array of movie objects
+                                }
+                            </div>
+                        </div>
+
+                        <div>
+                            <h4 style="color: var(--secondary-purple); margin-bottom: 6px;">2. LocalStorage Persistence
+                                & Data Syncing</h4>
+                            <p style="font-size: 0.9rem; color: var(--text-muted);">Whenever a movie is created,
+                                updated, or deleted, `localStorage.setItem('cyber_watchlist',
+                                JSON.stringify(watchlist))` serializes the JavaScript array into JSON for persistent
+                                browser storage across refreshes.</p>
+                            <div class="code-snippet-box">
+                                function saveWatchlistToStorage() {
+                                localStorage.setItem('cyber_watchlist', JSON.stringify(state.watchlist));
+                                }
+                                function loadWatchlistFromStorage() {
+                                const saved = localStorage.getItem('cyber_watchlist');
+                                return saved ? JSON.parse(saved) : INITIAL_WATCHLIST_SAMPLES;
+                                }
+                            </div>
+                        </div>
+
+                        <div>
+                            <h4 style="color: var(--status-completed); margin-bottom: 6px;">3. Full CRUD Lifecycle</h4>
+                            <p style="font-size: 0.9rem; color: var(--text-muted);">
+                                • <strong>C (Create):</strong> `addMovieToWatchlist(movieData)` adds a movie with
+                                status, rating, and review notes.<br>
+                                • <strong>R (Read):</strong> `renderWatchlistGrid()` dynamically maps the watchlist
+                                array to HTML cards.<br>
+                                • <strong>U (Update):</strong> `updateWatchlistMovie(id, updates)` modifies watch
+                                status, star rating, or notes.<br>
+                                • <strong>D (Delete):</strong> `deleteWatchlistMovie(id)` removes a movie after
+                                confirmation.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="guide-card">
+                    <h3 class="guide-subtitle"><i class="fa-solid fa-chalkboard-user"></i> Assignment Submission Tips
+                    </h3>
+                    <ul
+                        style="padding-left: 20px; color: var(--text-muted); font-size: 0.92rem; display: grid; gap: 8px;">
+                        <li><strong>Live TMDB API vs Demo Mode:</strong> Explain that your application features an
+                            intelligent dual-mode fallback engine. If an API key is present, it queries real-time TMDB
+                            servers; otherwise, it operates smoothly using local Cyber Deck mock data.</li>
+                        <li><strong>No External Frameworks Needed:</strong> Highlight that the entire app runs purely on
+                            native browser APIs without heavy dependencies like React or jQuery, keeping performance
+                            lightweight and blazingly fast.</li>
+                    </ul>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+
+    <!-- ================= INTERACTIVE MODALS ================= -->
+
+    <!-- MODAL 1: Add / Edit Watchlist Item Modal -->
+    <div class="modal-overlay" id="watchlistModal">
+        <div class="cyber-modal">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">ADD TO WATCHLIST</h3>
+                <button class="modal-close" class="closeModalBtn" onclick="closeWatchlistModal()">&times;</button>
+            </div>
+
+            <form id="watchlistForm">
+                <input type="hidden" id="modalMovieId">
+                <input type="hidden" id="modalMovieData">
+
+                <!-- Movie Header Preview -->
+                <div style="display: flex; gap: 14px; margin-bottom: 18px;" id="modalMoviePreview">
+                    <!-- Poster & Title injected via JS -->
+                </div>
+
+                <!-- Status Selector -->
+                <div class="form-group">
+                    <label class="form-label" for="modalStatusSelect">Watch Status:</label>
+                    <select id="modalStatusSelect" class="cyber-select" style="width: 100%; padding: 12px;">
+                        <option value="Plan to Watch">🔷 Plan to Watch</option>
+                        <option value="Watching">🟣 Watching</option>
+                        <option value="Completed">🟢 Completed</option>
+                    </select>
+                </div>
+
+                <!-- Star Rating Picker -->
+                <div class="form-group">
+                    <label class="form-label">Personal Star Rating (1 - 5 Stars):</label>
+                    <div class="star-picker" id="starPickerContainer">
+                        <span class="star" data-value="1">★</span>
+                        <span class="star" data-value="2">★</span>
+                        <span class="star" data-value="3">★</span>
+                        <span class="star" data-value="4">★</span>
+                        <span class="star" data-value="5">★</span>
+                    </div>
+                    <input type="hidden" id="modalRatingInput" value="0">
+                </div>
+
+                <!-- Review Notes -->
+                <div class="form-group">
+                    <label class="form-label" for="modalNotesInput">Personal Review / Custom Notes:</label>
+                    <textarea id="modalNotesInput" class="cyber-textarea"
+                        placeholder="Add your review notes, favorite quotes, or thoughts on this movie..."></textarea>
+                </div>
+
+                <!-- Buttons -->
+                <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px;">
+                    <button type="button" class="cyber-btn cyber-btn-secondary"
+                        onclick="closeWatchlistModal()">Cancel</button>
+                    <button type="submit" class="cyber-btn cyber-btn-primary" id="saveWatchlistBtn">Save to
+                        Watchlist</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- MODAL 2: TMDB API Key Settings Modal -->
+    <div class="modal-overlay" id="apiModal">
+        <div class="cyber-modal">
+            <div class="modal-header">
+                <h3 class="modal-title"><i class="fa-solid fa-key"></i> TMDB API CONFIGURATION</h3>
+                <button class="modal-close" onclick="closeApiModal()">&times;</button>
+            </div>
+
+            <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 16px;">
+                Enter a free TMDB API Key (v3 auth) to search live movies worldwide from TMDB servers. If left empty,
+                the app will run seamlessly in <strong>Cyber-Deck Demo Mode</strong>.
+            </p>
+
+            <div class="form-group">
+                <label class="form-label" for="apiKeyInput">TMDB API Key (v3):</label>
+                <input type="text" id="apiKeyInput" class="cyber-input" placeholder="e.g. 1a2b3c4d5e6f7g8h9i0j..."
+                    style="padding-left: 14px;">
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px;">
+                <button type="button" class="cyber-btn cyber-btn-pink" id="resetApiKeyBtn">Clear Key (Use Demo)</button>
+                <div style="display: flex; gap: 8px;">
+                    <button type="button" class="cyber-btn cyber-btn-secondary"
+                        onclick="closeApiModal()">Cancel</button>
+                    <button type="button" class="cyber-btn cyber-btn-primary" id="saveApiKeyBtn">Save & Connect</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- MODAL 3: Delete Confirmation Modal -->
+    <div class="modal-overlay" id="deleteModal">
+        <div class="cyber-modal" style="max-width: 420px; text-align: center;">
+            <div style="font-size: 2.5rem; color: var(--glitch-pink); margin-bottom: 12px;">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <h3 class="modal-title" style="color: var(--glitch-pink); margin-bottom: 10px;">REMOVE FROM WATCHLIST?</h3>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 24px;" id="deleteMovieTitle">Are you
+                sure you want to remove this movie from your personal watchlist?</p>
+
+            <div style="display: flex; justify-content: center; gap: 12px;">
+                <button class="cyber-btn cyber-btn-secondary" onclick="closeDeleteModal()">Cancel</button>
+                <button class="cyber-btn cyber-btn-pink" id="confirmDeleteBtn">Delete Movie</button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- TOAST NOTIFICATION CONTAINER -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- JavaScript Scripts -->
+    <script src="mockData.js"></script>
+    <script src="app.js"></script>
+</body>
+
+</html>
