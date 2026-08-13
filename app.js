@@ -1,15 +1,16 @@
 /**
  * ==========================================================================
- * CYBER-WATCH MOVIE WATCHLIST & DISCOVER ENGINE
- * Full Vanilla JS Application Logic featuring TMDB API Integration, 
- * LocalStorage CRUD Engine, Dynamic Filtering, Stats Engine & Modals.
+ * WATCHATHON - MOVIE WATCHLIST & DISCOVER ENGINE
+ * Full Vanilla JS Application with TMDB API, User Auth (LocalStorage),
+ * Per-User Watchlist Isolation, Movie Details Modal & CRUD Engine.
  * ==========================================================================
  */
 
 // Global Application State
 const state = {
+    currentUser: null,
     watchlist: [],
-    apiKey: '',
+    apiKey: '7f631300a2ef07bafe2c64d6214f99c2',
     currentView: 'discover-view',
     discoverMovies: [],
     filterStatus: 'ALL',
@@ -39,15 +40,76 @@ document.addEventListener('DOMContentLoaded', () => {
  */
 function initApp() {
     loadApiKey();
-    loadWatchlist();
+    loadUserSession();
     setupNavigation();
     setupEventListeners();
     setupStarPicker();
-    
-    // Initial Render of Discover & Watchlist Views
+
+    // Initial Render
     loadInitialDiscoverMovies();
     renderWatchlist();
     renderStats();
+}
+
+/* ==========================================================================
+   USER AUTH & ISOLATED LOCALSTORAGE ENGINE
+   ========================================================================== */
+
+function getUsersDb() {
+    const dbRaw = localStorage.getItem('cyber_users_db');
+    if (dbRaw) {
+        try { return JSON.parse(dbRaw); } catch (e) { return {}; }
+    }
+    return {};
+}
+
+function saveUsersDb(db) {
+    localStorage.setItem('cyber_users_db', JSON.stringify(db));
+}
+
+function loadUserSession() {
+    const savedUser = localStorage.getItem('cyber_current_user');
+    const usersDb = getUsersDb();
+
+    if (savedUser && usersDb[savedUser]) {
+        state.currentUser = savedUser;
+        state.watchlist = usersDb[savedUser].watchlist || [];
+    } else {
+        state.currentUser = null;
+        const savedWatchlist = localStorage.getItem('cyber_watchlist');
+        if (savedWatchlist) {
+            try { state.watchlist = JSON.parse(savedWatchlist); } catch (e) { state.watchlist = []; }
+        } else {
+            state.watchlist = [];
+        }
+    }
+
+    sanitizeWatchlistUrls();
+    updateUserHeaderUI();
+    updateNavWatchlistCount();
+}
+
+function updateUserHeaderUI() {
+    const container = document.getElementById('userBadgeContainer');
+    if (!container) return;
+
+    if (state.currentUser) {
+        container.innerHTML = `
+            <div class="user-profile-badge" title="Logged in as ${escapeHtml(state.currentUser)}">
+                <i class="fa-solid fa-circle-user" style="color: var(--primary-cyan); font-size: 1.1rem;"></i>
+                <span>${escapeHtml(state.currentUser)}</span>
+                <button class="logout-btn" onclick="handleLogout()" title="Logout">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                </button>
+            </div>
+        `;
+    } else {
+        container.innerHTML = `
+            <button class="auth-btn-trigger" onclick="openAuthModal('login')">
+                <i class="fa-solid fa-right-to-bracket"></i> Sign In
+            </button>
+        `;
+    }
 }
 
 /* ==========================================================================
@@ -58,56 +120,43 @@ function loadApiKey() {
     const savedKey = localStorage.getItem('cyber_tmdb_api_key');
     if (savedKey) {
         state.apiKey = savedKey;
-        updateApiBadge(true);
-    } else {
-        updateApiBadge(false);
     }
+    updateApiBadge();
 }
 
-function saveApiKey(key) {
-    state.apiKey = key.trim();
-    if (state.apiKey) {
-        localStorage.setItem('cyber_tmdb_api_key', state.apiKey);
-        updateApiBadge(true);
-        showToast('TMDB API Key saved successfully!', 'success');
-    } else {
-        localStorage.removeItem('cyber_tmdb_api_key');
-        updateApiBadge(false);
-        showToast('Running in Cyber-Deck Demo Mode.', 'info');
-    }
-}
-
-function updateApiBadge(isLive) {
+function updateApiBadge() {
     const dot = document.getElementById('apiStatusDot');
     const text = document.getElementById('apiStatusText');
-    if (isLive) {
-        dot.classList.remove('demo-mode');
-        text.textContent = 'TMDB Live Connected';
-    } else {
-        dot.classList.add('demo-mode');
-        text.textContent = 'Demo Mode (Click to Add Key)';
-    }
+    if (dot) dot.classList.remove('demo-mode');
+    if (text) text.textContent = 'TMDB Live API';
 }
 
 function loadWatchlist() {
-    const savedWatchlist = localStorage.getItem('cyber_watchlist');
-    if (savedWatchlist) {
-        try {
-            state.watchlist = JSON.parse(savedWatchlist);
-        } catch (e) {
-            console.error('Failed to parse watchlist from storage:', e);
-            state.watchlist = [...INITIAL_WATCHLIST_SAMPLES];
+    loadUserSession();
+}
+
+function sanitizeWatchlistUrls() {
+    state.watchlist.forEach(movie => {
+        if (movie.poster_path && movie.poster_path.includes('image.tmdb.org/t500')) {
+            movie.poster_path = movie.poster_path.replace('image.tmdb.org/t500', 'image.tmdb.org/t/p/w500');
         }
-    } else {
-        // First-time visit: populate with pre-seeded sample data
-        state.watchlist = [...INITIAL_WATCHLIST_SAMPLES];
-        saveWatchlist();
-    }
-    updateNavWatchlistCount();
+        if (movie.backdrop_path && movie.backdrop_path.includes('image.tmdb.org/t1280')) {
+            movie.backdrop_path = movie.backdrop_path.replace('image.tmdb.org/t1280', 'image.tmdb.org/t/p/w1280');
+        }
+    });
 }
 
 function saveWatchlist() {
-    localStorage.setItem('cyber_watchlist', JSON.stringify(state.watchlist));
+    if (state.currentUser) {
+        const usersDb = getUsersDb();
+        if (!usersDb[state.currentUser]) {
+            usersDb[state.currentUser] = { password: '', watchlist: [] };
+        }
+        usersDb[state.currentUser].watchlist = state.watchlist;
+        saveUsersDb(usersDb);
+    } else {
+        localStorage.setItem('cyber_watchlist', JSON.stringify(state.watchlist));
+    }
     updateNavWatchlistCount();
     renderStats();
 }
@@ -117,9 +166,136 @@ function updateNavWatchlistCount() {
     if (badge) badge.textContent = state.watchlist.length;
 }
 
+/* ================= AUTH MODAL & HANDLERS ================= */
+
+function openAuthModal(mode = 'login') {
+    switchAuthTab(mode);
+    document.getElementById('authModal').classList.add('active');
+}
+
+function closeAuthModal() {
+    document.getElementById('authModal').classList.remove('active');
+}
+
+function switchAuthTab(mode) {
+    const loginForm = document.getElementById('loginForm');
+    const registerForm = document.getElementById('registerForm');
+    const tabLogin = document.getElementById('tabLoginBtn');
+    const tabRegister = document.getElementById('tabRegisterBtn');
+    const errLogin = document.getElementById('authErrorMessage');
+    const errReg = document.getElementById('regErrorMessage');
+
+    if (errLogin) errLogin.style.display = 'none';
+    if (errReg) errReg.style.display = 'none';
+
+    if (mode === 'login') {
+        loginForm.style.display = 'block';
+        registerForm.style.display = 'none';
+        tabLogin.classList.add('active');
+        tabRegister.classList.remove('active');
+    } else {
+        loginForm.style.display = 'none';
+        registerForm.style.display = 'block';
+        tabRegister.classList.add('active');
+        tabLogin.classList.remove('active');
+    }
+}
+
+function handleLoginSubmit(e) {
+    e.preventDefault();
+    const username = document.getElementById('loginUsername').value.trim();
+    const password = document.getElementById('loginPassword').value;
+    const errEl = document.getElementById('authErrorMessage');
+
+    if (!username || !password) {
+        errEl.textContent = 'Please fill in all fields.';
+        errEl.style.display = 'block';
+        return;
+    }
+
+    const usersDb = getUsersDb();
+    const user = usersDb[username];
+
+    if (!user || user.password !== password) {
+        errEl.textContent = 'Invalid username or password.';
+        errEl.style.display = 'block';
+        return;
+    }
+
+    state.currentUser = username;
+    localStorage.setItem('cyber_current_user', username);
+    state.watchlist = user.watchlist || [];
+
+    sanitizeWatchlistUrls();
+    updateNavWatchlistCount();
+    updateUserHeaderUI();
+    renderWatchlist();
+    renderDiscoverGrid();
+    renderStats();
+    closeAuthModal();
+
+    showToast(`Welcome back, ${username}!`, 'success');
+}
+
+function handleRegisterSubmit(e) {
+    e.preventDefault();
+    const username = document.getElementById('regUsername').value.trim();
+    const password = document.getElementById('regPassword').value;
+    const errEl = document.getElementById('regErrorMessage');
+
+    if (!username || !password) {
+        errEl.textContent = 'Please enter a username and password.';
+        errEl.style.display = 'block';
+        return;
+    }
+
+    if (username.length < 3) {
+        errEl.textContent = 'Username must be at least 3 characters.';
+        errEl.style.display = 'block';
+        return;
+    }
+
+    const usersDb = getUsersDb();
+    if (usersDb[username]) {
+        errEl.textContent = 'Username already exists! Choose another or Sign In.';
+        errEl.style.display = 'block';
+        return;
+    }
+
+    usersDb[username] = { password: password, watchlist: [] };
+    saveUsersDb(usersDb);
+
+    state.currentUser = username;
+    localStorage.setItem('cyber_current_user', username);
+    state.watchlist = [];
+
+    updateNavWatchlistCount();
+    updateUserHeaderUI();
+    renderWatchlist();
+    renderDiscoverGrid();
+    renderStats();
+    closeAuthModal();
+
+    showToast(`Account created! Welcome, ${username}.`, 'success');
+}
+
+function handleLogout() {
+    saveWatchlist();
+    const prevUser = state.currentUser;
+    state.currentUser = null;
+    localStorage.removeItem('cyber_current_user');
+    state.watchlist = [];
+
+    updateUserHeaderUI();
+    renderWatchlist();
+    renderDiscoverGrid();
+    renderStats();
+
+    showToast(`Logged out from ${prevUser}.`, 'info');
+}
 
 /* ==========================================================================
-   TMDB API & DISCOVER ENGINE (Fetch API & Fallback)
+   TMDB API & DISCOVER ENGINE (Fetch API)
    ========================================================================== */
 
 /**
@@ -127,7 +303,6 @@ function updateNavWatchlistCount() {
  */
 async function loadInitialDiscoverMovies() {
     if (state.apiKey) {
-        // Query TMDB for trending/popular movies
         try {
             const url = `https://api.themoviedb.org/3/movie/popular?api_key=${state.apiKey}&language=en-US&page=1`;
             const response = await fetch(url);
@@ -135,19 +310,19 @@ async function loadInitialDiscoverMovies() {
             const data = await response.json();
             state.discoverMovies = formatTmdbResults(data.results);
         } catch (err) {
-            console.warn('TMDB API call failed, falling back to mock dataset:', err);
-            state.discoverMovies = [...MOCK_MOVIES];
-            showToast('Using Cyber-Deck Demo dataset.', 'info');
+            console.warn('TMDB API call failed:', err);
+            showToast('Could not reach TMDB. Check your API key.', 'info');
+            state.discoverMovies = [];
         }
     } else {
-        state.discoverMovies = [...MOCK_MOVIES];
+        state.discoverMovies = [];
     }
     renderDiscoverGrid();
     renderGenreFilters();
 }
 
 /**
- * Search movies from TMDB API or local mock data
+ * Search movies from TMDB API
  */
 async function searchMovies(query) {
     if (!query.trim()) {
@@ -156,7 +331,7 @@ async function searchMovies(query) {
     }
 
     const discoverTitle = document.getElementById('discoverResultsTitle');
-    discoverTitle.textContent = `Search Results for "${query}"`;
+    if (discoverTitle) discoverTitle.textContent = `Search Results for "${query}"`;
 
     if (state.apiKey) {
         try {
@@ -170,21 +345,10 @@ async function searchMovies(query) {
             }
         } catch (err) {
             console.error('TMDB Search Error:', err);
-            fallbackMockSearch(query);
+            showToast('Search failed. Check your connection.', 'info');
         }
-    } else {
-        fallbackMockSearch(query);
     }
     renderDiscoverGrid();
-}
-
-function fallbackMockSearch(query) {
-    const q = query.toLowerCase();
-    state.discoverMovies = MOCK_MOVIES.filter(m => 
-        m.title.toLowerCase().includes(q) || 
-        m.overview.toLowerCase().includes(q) ||
-        m.genres.some(g => g.toLowerCase().includes(q))
-    );
 }
 
 /**
@@ -199,11 +363,11 @@ function formatTmdbResults(results) {
             release_date: item.release_date || 'N/A',
             vote_average: item.vote_average ? Math.round(item.vote_average * 10) / 10 : 0,
             overview: item.overview || 'No overview available.',
-            poster_path: item.poster_path 
-                ? `https://image.tmdb.org/t500${item.poster_path}` 
+            poster_path: item.poster_path
+                ? `https://image.tmdb.org/t/p/w500${item.poster_path}`
                 : 'https://images.unsplash.com/photo-1594909122845-11baa439b7bf?auto=format&fit=crop&w=600&q=80',
-            backdrop_path: item.backdrop_path 
-                ? `https://image.tmdb.org/t1280${item.backdrop_path}` 
+            backdrop_path: item.backdrop_path
+                ? `https://image.tmdb.org/t/p/w1280${item.backdrop_path}`
                 : null,
             genres: genreNames.length > 0 ? genreNames : ['Cinema']
         };
@@ -224,7 +388,6 @@ function renderDiscoverGrid() {
 
     let moviesToDisplay = state.discoverMovies;
 
-    // Apply active genre filter
     if (state.activeGenre !== 'ALL') {
         moviesToDisplay = moviesToDisplay.filter(m => m.genres.includes(state.activeGenre));
     }
@@ -249,31 +412,37 @@ function renderDiscoverGrid() {
         const genresHtml = movie.genres.map(g => `<span class="genre-tag">${g}</span>`).join('');
 
         card.innerHTML = `
-            <div class="poster-container">
+            <div class="poster-container clickable-card-area" onclick="openMovieDetailsModal(${movie.id})">
                 <div class="tmdb-rating">★ ${movie.vote_average}</div>
                 <img src="${posterSrc}" alt="${escapeHtml(movie.title)}" class="movie-poster" onerror="this.src='https://images.unsplash.com/photo-1594909122845-11baa439b7bf?auto=format&fit=crop&w=600&q=80'">
                 <div class="poster-overlay">
-                    <button class="cyber-btn ${isInWatchlist ? 'cyber-btn-secondary' : 'cyber-btn-primary'}" 
-                        style="width: 100%;" 
-                        onclick="openAddModal(${movie.id})">
-                        <i class="fa-solid ${isInWatchlist ? 'fa-check' : 'fa-plus'}"></i> 
-                        ${isInWatchlist ? 'In Watchlist' : 'Add to Watchlist'}
+                    <button class="cyber-btn cyber-btn-secondary" style="width: 48%; font-size: 0.8rem;" onclick="event.stopPropagation(); openMovieDetailsModal(${movie.id})">
+                        <i class="fa-solid fa-circle-info"></i> Info
+                    </button>
+                    <button class="cyber-btn ${isInWatchlist ? 'cyber-btn-secondary' : 'cyber-btn-primary'}"
+                        style="width: 48%; font-size: 0.8rem;"
+                        onclick="event.stopPropagation(); openAddModal(${movie.id})">
+                        <i class="fa-solid ${isInWatchlist ? 'fa-check' : 'fa-plus'}"></i>
+                        ${isInWatchlist ? 'Added' : 'Add'}
                     </button>
                 </div>
             </div>
             <div class="movie-info">
-                <h3 class="movie-title">${escapeHtml(movie.title)}</h3>
+                <h3 class="movie-title clickable-card-area" onclick="openMovieDetailsModal(${movie.id})">${escapeHtml(movie.title)}</h3>
                 <div class="movie-meta">
-                    <span><i class="fa-regular fa-calendar"></i> ${movie.release_date.split('-')[0] || 'N/A'}</span>
+                    <span><i class="fa-regular fa-calendar"></i> ${(movie.release_date || '').split('-')[0] || 'N/A'}</span>
                     <span><i class="fa-solid fa-star" style="color: var(--star-gold);"></i> ${movie.vote_average} / 10</span>
                 </div>
                 <div class="genre-tags">${genresHtml}</div>
-                <p class="movie-overview">${escapeHtml(movie.overview)}</p>
-                
+                <p class="movie-overview clickable-card-area" onclick="openMovieDetailsModal(${movie.id})">${escapeHtml(movie.overview)}</p>
+
                 <div class="card-actions">
+                    <button class="btn-icon" onclick="openMovieDetailsModal(${movie.id})">
+                        <i class="fa-solid fa-circle-info"></i> Details
+                    </button>
                     <button class="btn-icon" onclick="openAddModal(${movie.id})">
-                        <i class="fa-solid ${isInWatchlist ? 'fa-pen-to-square' : 'fa-bookmark'}"></i> 
-                        ${isInWatchlist ? 'Edit Watchlist' : 'Save'}
+                        <i class="fa-solid ${isInWatchlist ? 'fa-pen-to-square' : 'fa-bookmark'}"></i>
+                        ${isInWatchlist ? 'Edit' : 'Save'}
                     </button>
                 </div>
             </div>
@@ -291,22 +460,19 @@ function renderWatchlist() {
 
     let list = [...state.watchlist];
 
-    // Filter by Status
     if (state.filterStatus !== 'ALL') {
         list = list.filter(m => m.status === state.filterStatus);
     }
 
-    // Filter by Local Search Bar
     if (state.localSearchQuery) {
         const q = state.localSearchQuery.toLowerCase();
-        list = list.filter(m => 
+        list = list.filter(m =>
             m.title.toLowerCase().includes(q) ||
             (m.notes && m.notes.toLowerCase().includes(q)) ||
             m.genres.some(g => g.toLowerCase().includes(q))
         );
     }
 
-    // Sort Watchlist Items
     if (state.sortBy === 'dateAdded') {
         list.sort((a, b) => new Date(b.dateAdded || 0) - new Date(a.dateAdded || 0));
     } else if (state.sortBy === 'personalRating') {
@@ -318,14 +484,16 @@ function renderWatchlist() {
     }
 
     if (list.length === 0) {
+        const emptyAction = state.currentUser
+            ? `<button class="cyber-btn cyber-btn-primary" style="margin-top: 16px;" onclick="switchView('discover-view')"><i class="fa-solid fa-compass"></i> Discover Movies</button>`
+            : `<button class="cyber-btn cyber-btn-primary" style="margin-top: 16px;" onclick="openAuthModal('login')"><i class="fa-solid fa-right-to-bracket"></i> Sign In</button>`;
+        const emptyMsg = state.currentUser ? 'No movies match your current filter.' : 'Sign in to access your personal watchlist.';
         grid.innerHTML = `
             <div style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: var(--text-muted);">
                 <i class="fa-solid fa-film" style="font-size: 3rem; color: var(--secondary-purple); margin-bottom: 12px;"></i>
                 <h3>Watchlist is Empty</h3>
-                <p>No movies match your current status filter or search query.</p>
-                <button class="cyber-btn cyber-btn-primary" style="margin-top: 16px;" onclick="switchView('discover-view')">
-                    <i class="fa-solid fa-compass"></i> Discover Movies
-                </button>
+                <p>${emptyMsg}</p>
+                ${emptyAction}
             </div>
         `;
         return;
@@ -340,21 +508,32 @@ function renderWatchlist() {
         const genresHtml = (movie.genres || []).map(g => `<span class="genre-tag">${g}</span>`).join('');
 
         card.innerHTML = `
-            <div class="poster-container">
+            <div class="poster-container clickable-card-area" onclick="openMovieDetailsModal(${movie.id})">
                 <span class="status-badge ${statusClass}">${movie.status}</span>
                 <div class="tmdb-rating">★ ${movie.vote_average}</div>
                 <img src="${movie.poster_path}" alt="${escapeHtml(movie.title)}" class="movie-poster" onerror="this.src='https://images.unsplash.com/photo-1594909122845-11baa439b7bf?auto=format&fit=crop&w=600&q=80'">
+                <div class="poster-overlay">
+                    <button class="cyber-btn cyber-btn-primary" style="width: 100%; font-size: 0.85rem;" onclick="event.stopPropagation(); openMovieDetailsModal(${movie.id})">
+                        <i class="fa-solid fa-circle-info"></i> View Details
+                    </button>
+                </div>
             </div>
             <div class="movie-info">
-                <h3 class="movie-title">${escapeHtml(movie.title)}</h3>
+                <h3 class="movie-title clickable-card-area" onclick="openMovieDetailsModal(${movie.id})">${escapeHtml(movie.title)}</h3>
                 <div class="movie-meta">
-                    <span><i class="fa-regular fa-calendar"></i> ${movie.release_date.split('-')[0] || 'N/A'}</span>
+                    <span><i class="fa-regular fa-calendar"></i> ${(movie.release_date || '').split('-')[0] || 'N/A'}</span>
                 </div>
                 <div class="genre-tags">${genresHtml}</div>
-                
-                ${movie.notes ? `<div class="personal-review-box"><div class="personal-stars">${starsHtml}</div><p class="personal-notes">"${escapeHtml(movie.notes)}"</p></div>` : `<div class="personal-review-box"><div class="personal-stars">${starsHtml}</div></div>`}
-                
+
+                ${movie.notes
+                ? `<div class="personal-review-box clickable-card-area" onclick="openMovieDetailsModal(${movie.id})"><div class="personal-stars">${starsHtml}</div><p class="personal-notes">"${escapeHtml(movie.notes)}"</p></div>`
+                : `<div class="personal-review-box clickable-card-area" onclick="openMovieDetailsModal(${movie.id})"><div class="personal-stars">${starsHtml}</div></div>`
+            }
+
                 <div class="card-actions">
+                    <button class="btn-icon" onclick="openMovieDetailsModal(${movie.id})">
+                        <i class="fa-solid fa-circle-info"></i> Details
+                    </button>
                     <button class="btn-icon" onclick="openEditModal(${movie.id})">
                         <i class="fa-solid fa-pen"></i> Edit
                     </button>
@@ -375,7 +554,7 @@ function renderGenreFilters() {
     const container = document.getElementById('genreFilterGroup');
     if (!container) return;
 
-    const genres = ['ALL', 'Sci-Fi', 'Action', 'Cyberpunk', 'Animation', 'Drama', 'Adventure'];
+    const genres = ['ALL', 'Sci-Fi', 'Action', 'Animation', 'Drama', 'Adventure', 'Thriller', 'Comedy'];
     container.innerHTML = genres.map(g => `
         <button class="filter-badge ${state.activeGenre === g ? 'active' : ''}" onclick="setGenreFilter('${g}')">
             ${g}
@@ -391,6 +570,84 @@ function setGenreFilter(genre) {
 
 
 /* ==========================================================================
+   MOVIE DETAILS MODAL
+   ========================================================================== */
+
+function openMovieDetailsModal(movieId) {
+    let movie = state.discoverMovies.find(m => m.id === movieId) ||
+        state.watchlist.find(m => m.id === movieId);
+
+    if (!movie) return;
+
+    const watchlistEntry = state.watchlist.find(m => m.id === movieId);
+
+    document.getElementById('detailTitle').textContent = movie.title;
+    document.getElementById('detailMatch').textContent = `★ ${movie.vote_average} TMDB`;
+    document.getElementById('detailYear').textContent = movie.release_date ? movie.release_date.split('-')[0] : 'N/A';
+
+    const posterElem = document.getElementById('detailPoster');
+    posterElem.src = movie.poster_path || 'https://images.unsplash.com/photo-1594909122845-11baa439b7bf?auto=format&fit=crop&w=600&q=80';
+
+    const heroBg = document.getElementById('detailHeroBg');
+    const backdropUrl = movie.backdrop_path || movie.poster_path;
+    if (backdropUrl) {
+        heroBg.style.backgroundImage = `url('${backdropUrl}')`;
+    } else {
+        heroBg.style.backgroundImage = 'none';
+    }
+
+    document.getElementById('detailOverview').textContent = movie.overview || 'No detailed overview available for this movie.';
+
+    const genresContainer = document.getElementById('detailGenres');
+    const genresList = movie.genres || ['Cinema'];
+    genresContainer.innerHTML = genresList.map(g => `<span class="genre-tag">${g}</span>`).join('');
+
+    const statusBox = document.getElementById('detailWatchlistStatusBox');
+    if (watchlistEntry) {
+        const starsHtml = '★'.repeat(watchlistEntry.personalRating || 0) + '☆'.repeat(5 - (watchlistEntry.personalRating || 0));
+        const statusClass = watchlistEntry.status === 'Plan to Watch' ? 'plan' : (watchlistEntry.status === 'Watching' ? 'watching' : 'completed');
+        statusBox.style.display = 'block';
+        statusBox.innerHTML = `
+            <div style="background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(0, 240, 255, 0.2); padding: 14px 18px; border-radius: 8px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span class="status-badge ${statusClass}">${watchlistEntry.status}</span>
+                    <span style="color: var(--star-gold); font-size: 1.1rem;">${starsHtml}</span>
+                </div>
+                ${watchlistEntry.notes ? `<p style="font-size: 0.88rem; color: #cbd5e1; font-style: italic; margin-top: 8px;">"${escapeHtml(watchlistEntry.notes)}"</p>` : ''}
+            </div>
+        `;
+    } else {
+        statusBox.style.display = 'none';
+        statusBox.innerHTML = '';
+    }
+
+    const actionsContainer = document.getElementById('detailActions');
+    if (watchlistEntry) {
+        actionsContainer.innerHTML = `
+            <button class="cyber-btn cyber-btn-primary" onclick="closeMovieDetailsModal(); openEditModal(${movie.id})">
+                <i class="fa-solid fa-pen"></i> Edit Watchlist & Rating
+            </button>
+            <button class="cyber-btn cyber-btn-pink" onclick="closeMovieDetailsModal(); openDeleteModal(${movie.id})">
+                <i class="fa-solid fa-trash"></i> Remove
+            </button>
+        `;
+    } else {
+        actionsContainer.innerHTML = `
+            <button class="cyber-btn cyber-btn-primary" onclick="closeMovieDetailsModal(); openAddModal(${movie.id})">
+                <i class="fa-solid fa-plus"></i> Add to My Watchlist
+            </button>
+        `;
+    }
+
+    document.getElementById('movieDetailsModal').classList.add('active');
+}
+
+function closeMovieDetailsModal() {
+    document.getElementById('movieDetailsModal').classList.remove('active');
+}
+
+
+/* ==========================================================================
    CRUD OPERATIONS (Create, Read, Update, Delete)
    ========================================================================== */
 
@@ -398,10 +655,14 @@ function setGenreFilter(genre) {
  * Open Modal to Add/Edit Movie in Watchlist
  */
 function openAddModal(movieId) {
-    // Find movie in discover list or watchlist
-    let movie = state.discoverMovies.find(m => m.id === movieId) || 
-                state.watchlist.find(m => m.id === movieId) ||
-                MOCK_MOVIES.find(m => m.id === movieId);
+    if (!state.currentUser) {
+        showToast('Please sign in or create an account to save movies to your watchlist!', 'info');
+        openAuthModal('login');
+        return;
+    }
+
+    let movie = state.discoverMovies.find(m => m.id === movieId) ||
+        state.watchlist.find(m => m.id === movieId);
 
     if (!movie) return;
 
@@ -411,14 +672,12 @@ function openAddModal(movieId) {
     document.getElementById('modalMovieId').value = movie.id;
     document.getElementById('modalMovieData').value = JSON.stringify(movie);
 
-    // Set initial form values
     document.getElementById('modalStatusSelect').value = existingInWatchlist ? existingInWatchlist.status : 'Plan to Watch';
     document.getElementById('modalNotesInput').value = existingInWatchlist ? (existingInWatchlist.notes || '') : '';
-    
+
     const initialRating = existingInWatchlist ? (existingInWatchlist.personalRating || 0) : 0;
     setStarRatingUI(initialRating);
 
-    // Movie preview element
     const preview = document.getElementById('modalMoviePreview');
     preview.innerHTML = `
         <img src="${movie.poster_path}" style="width: 55px; height: 80px; object-fit: cover; border-radius: 6px; border: 1px solid var(--border-color);">
@@ -456,7 +715,6 @@ function handleWatchlistSubmit(e) {
     const existingIndex = state.watchlist.findIndex(m => m.id === movieId);
 
     if (existingIndex >= 0) {
-        // UPDATE existing watchlist item
         state.watchlist[existingIndex] = {
             ...state.watchlist[existingIndex],
             status,
@@ -465,7 +723,6 @@ function handleWatchlistSubmit(e) {
         };
         showToast(`Updated "${movieBase.title}" in Watchlist!`, 'success');
     } else {
-        // CREATE new watchlist item
         const newItem = {
             ...movieBase,
             status,
@@ -524,14 +781,12 @@ function confirmDeleteMovie() {
 function renderStats() {
     const total = state.watchlist.length;
     const completed = state.watchlist.filter(m => m.status === 'Completed').length;
-    
-    // Average rating
+
     const rated = state.watchlist.filter(m => m.personalRating > 0);
-    const avg = rated.length > 0 
-        ? (rated.reduce((sum, m) => sum + m.personalRating, 0) / rated.length).toFixed(1) 
+    const avg = rated.length > 0
+        ? (rated.reduce((sum, m) => sum + m.personalRating, 0) / rated.length).toFixed(1)
         : '0.0';
 
-    // Estimated watch hours (assume avg 2.1 hours per movie)
     const hours = Math.round(total * 2.1);
 
     document.getElementById('statTotalMovies').textContent = total;
@@ -539,7 +794,6 @@ function renderStats() {
     document.getElementById('statAvgRating').textContent = `${avg} ★`;
     document.getElementById('statHoursEstimated').textContent = `${hours} hrs`;
 
-    // Render Status Breakdown Bar
     const plan = state.watchlist.filter(m => m.status === 'Plan to Watch').length;
     const watching = state.watchlist.filter(m => m.status === 'Watching').length;
 
@@ -582,7 +836,6 @@ function setupNavigation() {
 function switchView(viewId) {
     state.currentView = viewId;
 
-    // Update active nav button
     document.querySelectorAll('.nav-btn').forEach(btn => {
         if (btn.getAttribute('data-view') === viewId) {
             btn.classList.add('active');
@@ -591,37 +844,31 @@ function switchView(viewId) {
         }
     });
 
-    // Hide all view sections and display target
     document.querySelectorAll('.view-section').forEach(sec => {
         sec.style.display = sec.id === viewId ? 'block' : 'none';
     });
 
-    // Refresh view specific data
     if (viewId === 'watchlist-view') renderWatchlist();
     if (viewId === 'stats-view') renderStats();
 }
 
 function setupEventListeners() {
-    // TMDB Search Button
     document.getElementById('tmdbSearchBtn')?.addEventListener('click', () => {
         const query = document.getElementById('tmdbSearchInput').value;
         searchMovies(query);
     });
 
-    // Enter key on search input
     document.getElementById('tmdbSearchInput')?.addEventListener('keyup', (e) => {
         if (e.key === 'Enter') {
             searchMovies(e.target.value);
         }
     });
 
-    // Watchlist Local Live Filter Input
     document.getElementById('watchlistLocalSearch')?.addEventListener('input', (e) => {
         state.localSearchQuery = e.target.value;
         renderWatchlist();
     });
 
-    // Status Filter Badges in Watchlist
     document.querySelectorAll('[data-status-filter]').forEach(btn => {
         btn.addEventListener('click', (e) => {
             document.querySelectorAll('[data-status-filter]').forEach(b => b.classList.remove('active'));
@@ -631,40 +878,27 @@ function setupEventListeners() {
         });
     });
 
-    // Sort Dropdown
     document.getElementById('watchlistSort')?.addEventListener('change', (e) => {
         state.sortBy = e.target.value;
         renderWatchlist();
     });
 
-    // Watchlist Form Submit
     document.getElementById('watchlistForm')?.addEventListener('submit', handleWatchlistSubmit);
 
-    // API Key Modal Triggers
-    document.getElementById('openApiModalBtn')?.addEventListener('click', () => {
-        document.getElementById('apiKeyInput').value = state.apiKey;
-        document.getElementById('apiModal').classList.add('active');
-    });
-
-    document.getElementById('saveApiKeyBtn')?.addEventListener('click', () => {
-        const key = document.getElementById('apiKeyInput').value;
-        saveApiKey(key);
-        closeApiModal();
-        loadInitialDiscoverMovies();
-    });
-
-    document.getElementById('resetApiKeyBtn')?.addEventListener('click', () => {
-        saveApiKey('');
-        closeApiModal();
-        loadInitialDiscoverMovies();
-    });
-
-    // Delete Confirmation
     document.getElementById('confirmDeleteBtn')?.addEventListener('click', confirmDeleteMovie);
-}
 
-function closeApiModal() {
-    document.getElementById('apiModal').classList.remove('active');
+    // Auth form submissions
+    document.getElementById('loginForm')?.addEventListener('submit', handleLoginSubmit);
+    document.getElementById('registerForm')?.addEventListener('submit', handleRegisterSubmit);
+
+    // Close modals on overlay background click
+    document.querySelectorAll('.modal-overlay').forEach(overlay => {
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) {
+                overlay.classList.remove('active');
+            }
+        });
+    });
 }
 
 /**
@@ -738,4 +972,18 @@ function escapeHtml(str) {
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#039;');
+}
+
+function togglePasswordVisibility(inputId, btn) {
+    const input = document.getElementById(inputId);
+    const icon = btn.querySelector('i');
+    if (!input || !icon) return;
+
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.className = 'fa-solid fa-eye-slash';
+    } else {
+        input.type = 'password';
+        icon.className = 'fa-solid fa-eye';
+    }
 }

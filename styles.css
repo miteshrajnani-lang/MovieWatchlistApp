@@ -526,7 +526,7 @@ body::before {
 .status-badge {
     position: absolute;
     top: 12px;
-    right: 12px;
+    left: 12px;
     padding: 4px 10px;
     border-radius: 20px;
     font-size: 0.75rem;
@@ -949,4 +949,261 @@ body::before {
     .movie-grid {
         grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     }
+}
+/* =============================================
+   USER AUTH BADGE & SIGN IN BUTTON
+   ============================================= */
+.user-badge-container {
+    display: flex;
+    align-items: center;
+}
+
+.user-profile-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(0, 240, 255, 0.06);
+    border: 1px solid rgba(0, 240, 255, 0.3);
+    border-radius: 30px;
+    padding: 6px 12px;
+    font-size: 0.85rem;
+    font-family: var(--font-heading);
+    color: var(--text-main);
+    letter-spacing: 0.3px;
+    box-shadow: 0 0 10px rgba(0, 240, 255, 0.1);
+    transition: box-shadow 0.2s ease;
+}
+
+.user-profile-badge:hover {
+    box-shadow: 0 0 18px rgba(0, 240, 255, 0.25);
+}
+
+.user-profile-badge i {
+    color: var(--primary-cyan);
+    font-size: 1.1rem;
+}
+
+.logout-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 2px 4px;
+    border-radius: 4px;
+    transition: color 0.2s ease;
+    margin-left: 4px;
+}
+
+.logout-btn:hover {
+    color: var(--glitch-pink);
+}
+
+.auth-btn-trigger {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    background: rgba(0, 240, 255, 0.08);
+    border: 1px solid rgba(0, 240, 255, 0.35);
+    border-radius: 30px;
+    padding: 7px 16px;
+    color: var(--primary-cyan);
+    font-family: var(--font-heading);
+    font-size: 0.8rem;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    transition: all 0.2s ease;
+}
+
+.auth-btn-trigger:hover {
+    background: rgba(0, 240, 255, 0.16);
+    box-shadow: 0 0 14px rgba(0, 240, 255, 0.3);
+}
+
+/* =============================================
+   PASSWORD TOGGLE EYE BUTTON
+   ============================================= */
+.password-toggle-btn {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    color: var(--primary-cyan);
+    font-size: 1.05rem;
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    text-shadow: 0 0 8px var(--primary-cyan-glow);
+}
+
+.password-toggle-btn:hover {
+    color: #ffffff;
+    transform: translateY(-50%) scale(1.15);
+}
+
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+    display: none !important;
+}
+
+/* =============================================
+   MOVIE DETAILS MODAL
+   ============================================= */
+.movie-detail-modal {
+    background: #0a0b12;
+    border: 1px solid rgba(0, 240, 255, 0.25);
+    border-radius: var(--radius-lg);
+    width: 100%;
+    max-width: 860px;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+    box-shadow: 0 0 60px rgba(0,0,0,0.8), 0 0 30px rgba(0,240,255,0.1);
+    animation: modalSlideIn 0.3s ease;
+}
+
+@keyframes modalSlideIn {
+    from { transform: translateY(30px) scale(0.96); opacity: 0; }
+    to   { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+.movie-detail-hero {
+    position: relative;
+    height: 280px;
+    overflow: hidden;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+
+.movie-detail-hero-bg {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center top;
+    filter: blur(1px) brightness(0.55) saturate(1.2);
+    transform: scale(1.04);
+}
+
+.movie-detail-hero-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(10,11,18,0.85) 80%, #0a0b12 100%);
+}
+
+.movie-detail-close-btn {
+    position: absolute;
+    top: 14px;
+    right: 16px;
+    background: rgba(0,0,0,0.6);
+    border: 1px solid rgba(255,255,255,0.15);
+    color: #fff;
+    font-size: 1.4rem;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    transition: background 0.2s ease;
+    line-height: 1;
+}
+
+.movie-detail-close-btn:hover {
+    background: var(--glitch-pink);
+    border-color: var(--glitch-pink);
+}
+
+.movie-detail-hero-content {
+    position: absolute;
+    bottom: 20px;
+    left: 24px;
+    right: 24px;
+    z-index: 2;
+}
+
+.movie-detail-title {
+    font-family: var(--font-heading);
+    font-size: 1.9rem;
+    font-weight: 800;
+    color: #fff;
+    text-shadow: 0 2px 12px rgba(0,0,0,0.8);
+    margin-bottom: 10px;
+    line-height: 1.2;
+}
+
+.movie-detail-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.net-match {
+    color: var(--primary-cyan);
+    font-weight: 700;
+    font-size: 0.95rem;
+    font-family: var(--font-heading);
+}
+
+.net-year { color: #cbd5e1; font-size: 0.9rem; }
+
+.net-badge {
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 4px;
+    padding: 2px 7px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #e2e8f0;
+    letter-spacing: 0.5px;
+}
+
+.movie-detail-body { padding: 24px 28px 32px; }
+
+.movie-detail-main-grid {
+    display: grid;
+    grid-template-columns: 1fr 180px;
+    gap: 28px;
+    align-items: start;
+}
+
+.movie-detail-overview {
+    font-size: 0.95rem;
+    color: #cbd5e1;
+    line-height: 1.75;
+    margin-bottom: 22px;
+}
+
+.movie-detail-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.movie-detail-poster-wrapper {
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    border: 1px solid rgba(0, 240, 255, 0.2);
+    box-shadow: 0 0 20px rgba(0, 240, 255, 0.1);
+}
+
+.movie-detail-poster {
+    width: 100%;
+    display: block;
+    aspect-ratio: 2/3;
+    object-fit: cover;
+}
+
+.clickable-card-area { cursor: pointer; }
+
+@media (max-width: 600px) {
+    .movie-detail-main-grid { grid-template-columns: 1fr; }
+    .movie-detail-right { display: none; }
+    .movie-detail-title { font-size: 1.4rem; }
 }
