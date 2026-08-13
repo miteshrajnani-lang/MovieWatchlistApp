@@ -70,18 +70,27 @@
                     </div>
                 </div>
 
-                <!-- Section Toolbar -->
-                <div class="section-toolbar">
-                    <h2 class="section-title" id="discoverResultsTitle">Popular & Trending Selection</h2>
-                    <div class="filter-group" id="genreFilterGroup">
-                        <!-- Dynamic Genre Tags generated via JS -->
+                <div class="discover-layout">
+                    <!-- Filter Sidebar -->
+                    <aside class="filter-sidebar" id="filterSidebar">
+                        <!-- Injected via JS renderAdvancedFilters() -->
+                    </aside>
+
+                    <!-- Discover Main Content Area -->
+                    <div class="discover-main-content">
+                        <!-- Section Toolbar -->
+                        <div class="section-toolbar">
+                            <h2 class="section-title" id="discoverResultsTitle">Popular &amp; Trending Selection</h2>
+                            <span class="results-count-badge" id="discoverResultsCount"></span>
+                        </div>
+
+                        <!-- Discover Cards Grid -->
+                        <div class="movie-grid" id="discoverGrid">
+                            <!-- Movie Cards injected dynamically by app.js -->
+                        </div>
                     </div>
                 </div>
 
-                <!-- Discover Cards Grid -->
-                <div class="movie-grid" id="discoverGrid">
-                    <!-- Movie Cards injected dynamically by app.js -->
-                </div>
             </section>
 
 
@@ -160,8 +169,8 @@
                 </div>
 
                 <!-- Detailed Breakdown Box -->
-                <div class="guide-card">
-                    <h3 class="guide-subtitle"><i class="fa-solid fa-chart-bar"></i> Watch Status Breakdown</h3>
+                <div class="stat-breakdown-card">
+                    <h3 class="stat-breakdown-title"><i class="fa-solid fa-chart-bar"></i> Watch Status Breakdown</h3>
                     <div id="statusBreakdownContainer" style="margin-top: 15px;">
                         <!-- Injected via app.js -->
                     </div>
@@ -179,7 +188,7 @@
         <div class="cyber-modal">
             <div class="modal-header">
                 <h3 class="modal-title" id="modalTitle">ADD TO WATCHLIST</h3>
-                <button class="modal-close" class="closeModalBtn" onclick="closeWatchlistModal()">&times;</button>
+                <button class="modal-close" onclick="closeWatchlistModal()">&times;</button>
             </div>
 
             <form id="watchlistForm">
