@@ -110,7 +110,7 @@ function updateApiBadge() {
     const dot = document.getElementById('apiStatusDot');
     const text = document.getElementById('apiStatusText');
     if (dot) dot.classList.remove('demo-mode');
-    if (text) text.textContent = 'TMDB Live API';
+    if (text) text.textContent = 'TMDB API Live';
 }
 
 function sanitizeWatchlistUrls() {
