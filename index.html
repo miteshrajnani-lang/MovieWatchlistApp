@@ -14,14 +14,13 @@
 <body>
 
     <div class="app-container">
-        <!-- Header & Main Navigation -->
+        <!-- Main Header & Navigation -->
         <header class="cyber-header">
             <a href="#" class="brand-logo" id="logoLink">
                 <div class="logo-icon"><i class="fa-solid fa-play"></i></div>
-                <div class="logo-text">WATCHATHON</div>
+                <div class="logo-text" data-text="WATCHATHON">WATCHATHON</div>
             </a>
 
-            <!-- Multi-Page View Navigation Tabs -->
             <nav class="cyber-nav">
                 <button class="nav-btn active" data-view="discover-view">
                     <i class="fa-solid fa-compass"></i> Discover
@@ -35,24 +34,19 @@
                 </button>
             </nav>
 
-            <!-- API Mode Status Badge & User Auth Profile -->
             <div class="header-actions">
                 <div class="api-status-badge" title="TMDB API Connected">
                     <span class="status-dot" id="apiStatusDot"></span>
                     <span id="apiStatusText">TMDB Live API</span>
                 </div>
-                <div class="user-badge-container" id="userBadgeContainer">
-                    <!-- Injected via JS -->
-                </div>
+                <div class="user-badge-container" id="userBadgeContainer"></div>
             </div>
         </header>
 
-        <!-- MAIN CONTENT CONTAINER -->
         <main id="mainContent">
 
-            <!-- ================= VIEW 1: DISCOVER & SEARCH ================= -->
+            <!-- View: Discover Movies -->
             <section id="discover-view" class="view-section">
-                <!-- Hero Search Banner -->
                 <div class="hero-section">
                     <h1 class="hero-title">DISCOVER CINEMATIC WORLDS</h1>
                     <p class="hero-subtitle">Search millions of movies and add any movie directly to your Watchlist.</p>
@@ -61,7 +55,7 @@
                         <div class="search-input-group">
                             <i class="fa-solid fa-magnifying-glass search-icon"></i>
                             <input type="text" id="tmdbSearchInput" class="cyber-input"
-                                placeholder="Search movies by title, keyword, or actor (e.g. Blade Runner, Matrix, Dune)...">
+                                placeholder="Search movies by title or keyword (e.g. Blade Runner, Matrix....)">
                         </div>
                         <button class="cyber-btn cyber-btn-primary" id="tmdbSearchBtn">
                             <i class="fa-solid fa-bolt"></i> Search TMDB
@@ -70,35 +64,22 @@
                 </div>
 
                 <div class="discover-layout">
-                    <!-- Filter Sidebar -->
-                    <aside class="filter-sidebar" id="filterSidebar">
-                        <!-- Injected via JS renderAdvancedFilters() -->
-                    </aside>
-
-                    <!-- Discover Main Content Area -->
+                    <aside class="filter-sidebar" id="filterSidebar"></aside>
                     <div class="discover-main-content">
-                        <!-- Section Toolbar -->
                         <div class="section-toolbar">
                             <h2 class="section-title" id="discoverResultsTitle">Popular &amp; Trending Selection</h2>
                             <span class="results-count-badge" id="discoverResultsCount"></span>
                         </div>
-
-                        <!-- Discover Cards Grid -->
-                        <div class="movie-grid" id="discoverGrid">
-                            <!-- Movie Cards injected dynamically by app.js -->
-                        </div>
+                        <div class="movie-grid" id="discoverGrid"></div>
                     </div>
                 </div>
-
             </section>
 
-
-            <!-- ================= VIEW 2: MY WATCHLIST ================= -->
+            <!-- View: Personal Watchlist -->
             <section id="watchlist-view" class="view-section" style="display: none;">
                 <div class="hero-section" style="padding: 28px 30px;">
-                    <h1 class="hero-title" style="font-size: 1.8rem;">MY PERSONAL WATCHLIST</h1>
-                    <p class="hero-subtitle">Manage, rate, review, and filter your saved movie collection. Synced
-                        automatically with LocalStorage.</p>
+                    <h1 class="hero-title" style="font-size: 1.8rem;">MY WATCHLIST</h1>
+                    <p class="hero-subtitle">Manage, rate, review, and filter your saved movie collection. </p>
 
                     <div class="search-box-wrapper">
                         <div class="search-input-group">
@@ -109,9 +90,7 @@
                     </div>
                 </div>
 
-                <!-- Watchlist Controls Bar -->
                 <div class="section-toolbar">
-                    <!-- Status Filter Tabs -->
                     <div class="filter-group">
                         <button class="filter-badge active" data-status-filter="ALL">All Movies</button>
                         <button class="filter-badge" data-status-filter="Plan to Watch">Plan to Watch</button>
@@ -119,7 +98,6 @@
                         <button class="filter-badge" data-status-filter="Completed">Completed</button>
                     </div>
 
-                    <!-- Sort Dropdown -->
                     <div style="display: flex; align-items: center; gap: 10px;">
                         <label for="watchlistSort" style="font-size: 0.82rem; color: var(--text-muted);">Sort
                             By:</label>
@@ -132,20 +110,15 @@
                     </div>
                 </div>
 
-                <!-- Watchlist Cards Grid -->
-                <div class="movie-grid" id="watchlistGrid">
-                    <!-- Watchlist items rendered dynamically -->
-                </div>
+                <div class="movie-grid" id="watchlistGrid"></div>
             </section>
 
-
-            <!-- ================= VIEW 3: STATS & ANALYTICS ================= -->
+            <!-- View: Statistics & Analytics -->
             <section id="stats-view" class="view-section" style="display: none;">
                 <div class="section-toolbar">
                     <h2 class="section-title">WATCHLIST ANALYTICS & STATS</h2>
                 </div>
 
-                <!-- Key Stat Metrics Cards -->
                 <div class="stats-grid">
                     <div class="stat-card">
                         <div class="stat-number" id="statTotalMovies">0</div>
@@ -167,22 +140,16 @@
                     </div>
                 </div>
 
-                <!-- Detailed Breakdown Box -->
                 <div class="stat-breakdown-card">
                     <h3 class="stat-breakdown-title"><i class="fa-solid fa-chart-bar"></i> Watch Status Breakdown</h3>
-                    <div id="statusBreakdownContainer" style="margin-top: 15px;">
-                        <!-- Injected via app.js -->
-                    </div>
+                    <div id="statusBreakdownContainer" style="margin-top: 15px;"></div>
                 </div>
             </section>
 
         </main>
     </div>
 
-
-    <!-- ================= INTERACTIVE MODALS ================= -->
-
-    <!-- MODAL 1: Add / Edit Watchlist Item Modal -->
+    <!-- Modal: Add / Edit Watchlist Item -->
     <div class="modal-overlay" id="watchlistModal">
         <div class="cyber-modal">
             <div class="modal-header">
@@ -194,12 +161,8 @@
                 <input type="hidden" id="modalMovieId">
                 <input type="hidden" id="modalMovieData">
 
-                <!-- Movie Header Preview -->
-                <div style="display: flex; gap: 14px; margin-bottom: 18px;" id="modalMoviePreview">
-                    <!-- Poster & Title injected via JS -->
-                </div>
+                <div style="display: flex; gap: 14px; margin-bottom: 18px;" id="modalMoviePreview"></div>
 
-                <!-- Status Selector -->
                 <div class="form-group">
                     <label class="form-label" for="modalStatusSelect">Watch Status:</label>
                     <select id="modalStatusSelect" class="cyber-select" style="width: 100%; padding: 12px;">
@@ -209,7 +172,6 @@
                     </select>
                 </div>
 
-                <!-- Star Rating Picker -->
                 <div class="form-group">
                     <label class="form-label">Personal Star Rating (1 - 5 Stars):</label>
                     <div class="star-picker" id="starPickerContainer">
@@ -222,14 +184,12 @@
                     <input type="hidden" id="modalRatingInput" value="0">
                 </div>
 
-                <!-- Review Notes -->
                 <div class="form-group">
                     <label class="form-label" for="modalNotesInput">Personal Review / Custom Notes:</label>
                     <textarea id="modalNotesInput" class="cyber-textarea"
                         placeholder="Add your review notes, favorite quotes, or thoughts on this movie..."></textarea>
                 </div>
 
-                <!-- Buttons -->
                 <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px;">
                     <button type="button" class="cyber-btn cyber-btn-secondary"
                         onclick="closeWatchlistModal()">Cancel</button>
@@ -240,10 +200,9 @@
         </div>
     </div>
 
-    <!-- MODAL 2: Movie Details Modal -->
+    <!-- Modal: Movie Details & Expanded Overview -->
     <div class="modal-overlay" id="movieDetailsModal">
         <div class="movie-detail-modal">
-            <!-- Banner/Hero Container -->
             <div class="movie-detail-hero" id="detailHeroContainer">
                 <div class="movie-detail-hero-bg" id="detailHeroBg"></div>
                 <div class="movie-detail-hero-overlay"></div>
@@ -259,24 +218,13 @@
                 </div>
             </div>
 
-            <!-- Modal Body Content -->
             <div class="movie-detail-body">
                 <div class="movie-detail-main-grid">
                     <div class="movie-detail-left">
-                        <div class="genre-tags" id="detailGenres" style="margin-bottom: 14px;">
-                            <!-- Genre tags -->
-                        </div>
-                        <p class="movie-detail-overview" id="detailOverview">
-                            Loading synopsis...
-                        </p>
-
-                        <!-- Watchlist status if added -->
+                        <div class="genre-tags" id="detailGenres" style="margin-bottom: 14px;"></div>
+                        <p class="movie-detail-overview" id="detailOverview">Loading synopsis...</p>
                         <div id="detailWatchlistStatusBox" style="margin-bottom: 20px;"></div>
-
-                        <!-- Action Buttons -->
-                        <div class="movie-detail-actions" id="detailActions">
-                            <!-- Injected via JS -->
-                        </div>
+                        <div class="movie-detail-actions" id="detailActions"></div>
                     </div>
 
                     <div class="movie-detail-right">
@@ -290,7 +238,7 @@
         </div>
     </div>
 
-    <!-- MODAL 3: Delete Confirmation Modal -->
+    <!-- Modal: Delete Confirmation -->
     <div class="modal-overlay" id="deleteModal">
         <div class="cyber-modal" style="max-width: 420px; text-align: center;">
             <div style="font-size: 2.5rem; color: var(--glitch-pink); margin-bottom: 12px;">
@@ -307,12 +255,13 @@
         </div>
     </div>
 
-    <!-- MODAL 4: User Auth Modal (Login / Register) -->
+    <!-- Modal: User Authentication (Login / Register) -->
     <div class="modal-overlay" id="authModal">
         <div class="cyber-modal" style="max-width: 420px;">
             <div class="modal-header">
-                <h3 class="modal-title" id="authModalTitle" style="font-size: 1.1rem;"><i
-                        class="fa-solid fa-user-shield"></i> ACCOUNT AUTHENTICATION</h3>
+                <h3 class="modal-title" id="authModalTitle" style="font-size: 1.1rem;">
+                    <i class="fa-solid fa-user-shield"></i> ACCOUNT AUTHENTICATION
+                </h3>
                 <button class="modal-close" onclick="closeAuthModal()">&times;</button>
             </div>
 
@@ -320,7 +269,6 @@
                 Sign in or create an account to start managing your movie watchlist.
             </p>
 
-            <!-- Auth Mode Tab Selector -->
             <div
                 style="display: flex; gap: 8px; margin-bottom: 20px; background: rgba(0,0,0,0.4); padding: 4px; border-radius: 6px; border: 1px solid var(--border-color);">
                 <button class="cyber-btn cyber-btn-secondary active" id="tabLoginBtn"
@@ -330,7 +278,6 @@
                     Account</button>
             </div>
 
-            <!-- Login Form -->
             <form id="loginForm">
                 <div class="form-group">
                     <label class="form-label" for="loginUsername">Username:</label>
@@ -356,7 +303,6 @@
                 </button>
             </form>
 
-            <!-- Register Form -->
             <form id="registerForm" style="display: none;">
                 <div class="form-group">
                     <label class="form-label" for="regUsername">Choose Username:</label>
@@ -383,10 +329,9 @@
         </div>
     </div>
 
-    <!-- TOAST NOTIFICATION CONTAINER -->
+    <!-- Toast Notifications Container -->
     <div class="toast-container" id="toastContainer"></div>
 
-    <!-- JavaScript Scripts -->
     <script src="app.js"></script>
 </body>
 

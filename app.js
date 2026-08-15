@@ -1,4 +1,4 @@
-// Global Application State
+// State Manageement
 const state = {
     currentUser: null,
     watchlist: [],
@@ -10,13 +10,12 @@ const state = {
     sortBy: 'dateAdded',
     activeGenre: 'ALL',
     deletingMovieId: null,
-    // Advanced discover filters
     minRating: 0,
     releaseDecade: 'ALL',
     discoverSort: 'default'
 };
 
-// Genre Map for TMDB API genre IDs
+// TMDB Genre Mappings
 const TMDB_GENRES = {
     28: "Action", 12: "Adventure", 16: "Animation", 35: "Comedy", 80: "Crime",
     99: "Documentary", 18: "Drama", 10751: "Family", 14: "Fantasy", 36: "History",
@@ -24,14 +23,11 @@ const TMDB_GENRES = {
     10770: "TV Movie", 53: "Thriller", 10752: "War", 37: "Western"
 };
 
-// DOM Content Loaded - Application Entry Point
+// Application Entry Point
 document.addEventListener('DOMContentLoaded', () => {
     initApp();
 });
 
-/**
- * Initialize Application Engine
- */
 function initApp() {
     loadApiKey();
     loadUserSession();
@@ -39,16 +35,12 @@ function initApp() {
     setupEventListeners();
     setupStarPicker();
 
-    // Initial Render
     loadInitialDiscoverMovies();
     renderWatchlist();
     renderStats();
 }
 
-/* ==========================================================================
-   USER AUTH & ISOLATED LOCALSTORAGE ENGINE
-   ========================================================================== */
-
+// User Session & LocalStorage Engine
 function getUsersDb() {
     const dbRaw = localStorage.getItem('cyber_users_db');
     if (dbRaw) {
@@ -106,10 +98,6 @@ function updateUserHeaderUI() {
     }
 }
 
-/* ==========================================================================
-   STORAGE ENGINE (LocalStorage Sync)
-   ========================================================================== */
-
 function loadApiKey() {
     const savedKey = localStorage.getItem('cyber_tmdb_api_key');
     if (savedKey) {
@@ -156,8 +144,7 @@ function updateNavWatchlistCount() {
     if (badge) badge.textContent = state.watchlist.length;
 }
 
-/* ================= AUTH MODAL & HANDLERS ================= */
-
+// Authentication Handlers
 function openAuthModal(mode = 'login') {
     switchAuthTab(mode);
     document.getElementById('authModal').classList.add('active');
@@ -284,13 +271,7 @@ function handleLogout() {
     showToast(`Logged out from ${prevUser}.`, 'info');
 }
 
-/* ==========================================================================
-   TMDB API & DISCOVER ENGINE (Fetch API)
-   ========================================================================== */
-
-/**
- * Load initial movies for Discover section
- */
+// TMDB API Fetch & Search Engine
 async function loadInitialDiscoverMovies() {
     if (state.apiKey) {
         try {
@@ -311,9 +292,6 @@ async function loadInitialDiscoverMovies() {
     renderAdvancedFilters();
 }
 
-/**
- * Search movies from TMDB API
- */
 async function searchMovies(query) {
     if (!query.trim()) {
         loadInitialDiscoverMovies();
@@ -341,9 +319,6 @@ async function searchMovies(query) {
     renderDiscoverGrid();
 }
 
-/**
- * Format raw TMDB API items into standard internal movie structure
- */
 function formatTmdbResults(results) {
     return results.map(item => {
         const genreNames = (item.genre_ids || []).map(id => TMDB_GENRES[id] || 'Movie');
@@ -364,31 +339,21 @@ function formatTmdbResults(results) {
     });
 }
 
-
-/* ==========================================================================
-   UI RENDERING ENGINE (DOM Manipulation)
-   ========================================================================== */
-
-/**
- * Render Discover Grid
- */
+// Discover Grid & Multi-Filter Engine
 function renderDiscoverGrid() {
     const grid = document.getElementById('discoverGrid');
     grid.innerHTML = '';
 
     let moviesToDisplay = [...state.discoverMovies];
 
-    // Genre filter
     if (state.activeGenre !== 'ALL') {
         moviesToDisplay = moviesToDisplay.filter(m => m.genres.includes(state.activeGenre));
     }
 
-    // Min TMDB rating filter
     if (state.minRating > 0) {
         moviesToDisplay = moviesToDisplay.filter(m => m.vote_average >= state.minRating);
     }
 
-    // Release decade filter
     if (state.releaseDecade !== 'ALL') {
         moviesToDisplay = moviesToDisplay.filter(m => {
             const year = parseInt((m.release_date || '').split('-')[0]);
@@ -402,7 +367,6 @@ function renderDiscoverGrid() {
         });
     }
 
-    // Sort discover results
     if (state.discoverSort === 'rating') {
         moviesToDisplay.sort((a, b) => b.vote_average - a.vote_average);
     } else if (state.discoverSort === 'newest') {
@@ -469,102 +433,6 @@ function renderDiscoverGrid() {
                     <button class="btn-icon" onclick="openAddModal(${movie.id})">
                         <i class="fa-solid ${isInWatchlist ? 'fa-pen-to-square' : 'fa-bookmark'}"></i>
                         ${isInWatchlist ? 'Edit' : 'Save'}
-                    </button>
-                </div>
-            </div>
-        `;
-        grid.appendChild(card);
-    });
-}
-
-/**
- * Render Watchlist Grid
- */
-function renderWatchlist() {
-    const grid = document.getElementById('watchlistGrid');
-    grid.innerHTML = '';
-
-    let list = [...state.watchlist];
-
-    if (state.filterStatus !== 'ALL') {
-        list = list.filter(m => m.status === state.filterStatus);
-    }
-
-    if (state.localSearchQuery) {
-        const q = state.localSearchQuery.toLowerCase();
-        list = list.filter(m =>
-            m.title.toLowerCase().includes(q) ||
-            (m.notes && m.notes.toLowerCase().includes(q)) ||
-            m.genres.some(g => g.toLowerCase().includes(q))
-        );
-    }
-
-    if (state.sortBy === 'dateAdded') {
-        list.sort((a, b) => new Date(b.dateAdded || 0) - new Date(a.dateAdded || 0));
-    } else if (state.sortBy === 'personalRating') {
-        list.sort((a, b) => (b.personalRating || 0) - (a.personalRating || 0));
-    } else if (state.sortBy === 'tmdbRating') {
-        list.sort((a, b) => (b.vote_average || 0) - (a.vote_average || 0));
-    } else if (state.sortBy === 'title') {
-        list.sort((a, b) => a.title.localeCompare(b.title));
-    }
-
-    if (list.length === 0) {
-        const emptyAction = state.currentUser
-            ? `<button class="cyber-btn cyber-btn-primary" style="margin-top: 16px;" onclick="switchView('discover-view')"><i class="fa-solid fa-compass"></i> Discover Movies</button>`
-            : `<button class="cyber-btn cyber-btn-primary" style="margin-top: 16px;" onclick="openAuthModal('login')"><i class="fa-solid fa-right-to-bracket"></i> Sign In</button>`;
-        const emptyMsg = state.currentUser ? 'No movies match your current filter.' : 'Sign in to access your personal watchlist.';
-        grid.innerHTML = `
-            <div style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: var(--text-muted);">
-                <i class="fa-solid fa-film" style="font-size: 3rem; color: var(--secondary-purple); margin-bottom: 12px;"></i>
-                <h3>Watchlist is Empty</h3>
-                <p>${emptyMsg}</p>
-                ${emptyAction}
-            </div>
-        `;
-        return;
-    }
-
-    list.forEach(movie => {
-        const card = document.createElement('div');
-        card.className = 'movie-card';
-
-        const statusClass = movie.status === 'Plan to Watch' ? 'plan' : (movie.status === 'Watching' ? 'watching' : 'completed');
-        const starsHtml = '★'.repeat(movie.personalRating || 0) + '☆'.repeat(5 - (movie.personalRating || 0));
-        const genresHtml = (movie.genres || []).map(g => `<span class="genre-tag">${g}</span>`).join('');
-
-        card.innerHTML = `
-            <div class="poster-container clickable-card-area" onclick="openMovieDetailsModal(${movie.id})">
-                <span class="status-badge ${statusClass}">${movie.status}</span>
-                <div class="tmdb-rating">★ ${movie.vote_average}</div>
-                <img src="${movie.poster_path}" alt="${escapeHtml(movie.title)}" class="movie-poster" onerror="this.src='https://images.unsplash.com/photo-1594909122845-11baa439b7bf?auto=format&fit=crop&w=600&q=80'">
-                <div class="poster-overlay">
-                    <button class="cyber-btn cyber-btn-primary" style="width: 100%; font-size: 0.85rem;" onclick="event.stopPropagation(); openMovieDetailsModal(${movie.id})">
-                        <i class="fa-solid fa-circle-info"></i> View Details
-                    </button>
-                </div>
-            </div>
-            <div class="movie-info">
-                <h3 class="movie-title clickable-card-area" onclick="openMovieDetailsModal(${movie.id})">${escapeHtml(movie.title)}</h3>
-                <div class="movie-meta">
-                    <span><i class="fa-regular fa-calendar"></i> ${(movie.release_date || '').split('-')[0] || 'N/A'}</span>
-                </div>
-                <div class="genre-tags">${genresHtml}</div>
-
-                ${movie.notes
-                ? `<div class="personal-review-box clickable-card-area" onclick="openMovieDetailsModal(${movie.id})"><div class="personal-stars">${starsHtml}</div><p class="personal-notes">"${escapeHtml(movie.notes)}"</p></div>`
-                : `<div class="personal-review-box clickable-card-area" onclick="openMovieDetailsModal(${movie.id})"><div class="personal-stars">${starsHtml}</div></div>`
-            }
-
-                <div class="card-actions">
-                    <button class="btn-icon" onclick="openMovieDetailsModal(${movie.id})">
-                        <i class="fa-solid fa-circle-info"></i> Details
-                    </button>
-                    <button class="btn-icon" onclick="openEditModal(${movie.id})">
-                        <i class="fa-solid fa-pen"></i> Edit
-                    </button>
-                    <button class="btn-icon delete" onclick="openDeleteModal(${movie.id})">
-                        <i class="fa-solid fa-trash"></i> Delete
                     </button>
                 </div>
             </div>
@@ -674,11 +542,101 @@ function renderAdvancedFilters() {
     `;
 }
 
+// Watchlist Grid & Rendering
+function renderWatchlist() {
+    const grid = document.getElementById('watchlistGrid');
+    grid.innerHTML = '';
 
-/* ==========================================================================
-   MOVIE DETAILS MODAL
-   ========================================================================== */
+    let list = [...state.watchlist];
 
+    if (state.filterStatus !== 'ALL') {
+        list = list.filter(m => m.status === state.filterStatus);
+    }
+
+    if (state.localSearchQuery) {
+        const q = state.localSearchQuery.toLowerCase();
+        list = list.filter(m =>
+            m.title.toLowerCase().includes(q) ||
+            (m.notes && m.notes.toLowerCase().includes(q)) ||
+            m.genres.some(g => g.toLowerCase().includes(q))
+        );
+    }
+
+    if (state.sortBy === 'dateAdded') {
+        list.sort((a, b) => new Date(b.dateAdded || 0) - new Date(a.dateAdded || 0));
+    } else if (state.sortBy === 'personalRating') {
+        list.sort((a, b) => (b.personalRating || 0) - (a.personalRating || 0));
+    } else if (state.sortBy === 'tmdbRating') {
+        list.sort((a, b) => (b.vote_average || 0) - (a.vote_average || 0));
+    } else if (state.sortBy === 'title') {
+        list.sort((a, b) => a.title.localeCompare(b.title));
+    }
+
+    if (list.length === 0) {
+        const emptyAction = state.currentUser
+            ? `<button class="cyber-btn cyber-btn-primary" style="margin-top: 16px;" onclick="switchView('discover-view')"><i class="fa-solid fa-compass"></i> Discover Movies</button>`
+            : `<button class="cyber-btn cyber-btn-primary" style="margin-top: 16px;" onclick="openAuthModal('login')"><i class="fa-solid fa-right-to-bracket"></i> Sign In</button>`;
+        const emptyMsg = state.currentUser ? 'No movies match your current filter.' : 'Sign in to access your personal watchlist.';
+        grid.innerHTML = `
+            <div style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: var(--text-muted);">
+                <i class="fa-solid fa-film" style="font-size: 3rem; color: var(--secondary-purple); margin-bottom: 12px;"></i>
+                <h3>Watchlist is Empty</h3>
+                <p>${emptyMsg}</p>
+                ${emptyAction}
+            </div>
+        `;
+        return;
+    }
+
+    list.forEach(movie => {
+        const card = document.createElement('div');
+        card.className = 'movie-card';
+
+        const statusClass = movie.status === 'Plan to Watch' ? 'plan' : (movie.status === 'Watching' ? 'watching' : 'completed');
+        const starsHtml = '★'.repeat(movie.personalRating || 0) + '☆'.repeat(5 - (movie.personalRating || 0));
+        const genresHtml = (movie.genres || []).map(g => `<span class="genre-tag">${g}</span>`).join('');
+
+        card.innerHTML = `
+            <div class="poster-container clickable-card-area" onclick="openMovieDetailsModal(${movie.id})">
+                <span class="status-badge ${statusClass}">${movie.status}</span>
+                <div class="tmdb-rating">★ ${movie.vote_average}</div>
+                <img src="${movie.poster_path}" alt="${escapeHtml(movie.title)}" class="movie-poster" onerror="this.src='https://images.unsplash.com/photo-1594909122845-11baa439b7bf?auto=format&fit=crop&w=600&q=80'">
+                <div class="poster-overlay">
+                    <button class="cyber-btn cyber-btn-primary" style="width: 100%; font-size: 0.85rem;" onclick="event.stopPropagation(); openMovieDetailsModal(${movie.id})">
+                        <i class="fa-solid fa-circle-info"></i> View Details
+                    </button>
+                </div>
+            </div>
+            <div class="movie-info">
+                <h3 class="movie-title clickable-card-area" onclick="openMovieDetailsModal(${movie.id})">${escapeHtml(movie.title)}</h3>
+                <div class="movie-meta">
+                    <span><i class="fa-regular fa-calendar"></i> ${(movie.release_date || '').split('-')[0] || 'N/A'}</span>
+                </div>
+                <div class="genre-tags">${genresHtml}</div>
+
+                ${movie.notes
+                ? `<div class="personal-review-box clickable-card-area" onclick="openMovieDetailsModal(${movie.id})"><div class="personal-stars">${starsHtml}</div><p class="personal-notes">"${escapeHtml(movie.notes)}"</p></div>`
+                : `<div class="personal-review-box clickable-card-area" onclick="openMovieDetailsModal(${movie.id})"><div class="personal-stars">${starsHtml}</div></div>`
+            }
+
+                <div class="card-actions">
+                    <button class="btn-icon" onclick="openMovieDetailsModal(${movie.id})">
+                        <i class="fa-solid fa-circle-info"></i> Details
+                    </button>
+                    <button class="btn-icon" onclick="openEditModal(${movie.id})">
+                        <i class="fa-solid fa-pen"></i> Edit
+                    </button>
+                    <button class="btn-icon delete" onclick="openDeleteModal(${movie.id})">
+                        <i class="fa-solid fa-trash"></i> Delete
+                    </button>
+                </div>
+            </div>
+        `;
+        grid.appendChild(card);
+    });
+}
+
+// Movie Details Modal
 function openMovieDetailsModal(movieId) {
     let movie = state.discoverMovies.find(m => m.id === movieId) ||
         state.watchlist.find(m => m.id === movieId);
@@ -752,14 +710,7 @@ function closeMovieDetailsModal() {
     document.getElementById('movieDetailsModal').classList.remove('active');
 }
 
-
-/* ==========================================================================
-   CRUD OPERATIONS (Create, Read, Update, Delete)
-   ========================================================================== */
-
-/**
- * Open Modal to Add/Edit Movie in Watchlist
- */
+// Watchlist CRUD Operations
 function openAddModal(movieId) {
     if (!state.currentUser) {
         showToast('Please sign in or create an account to save movies to your watchlist!', 'info');
@@ -804,9 +755,6 @@ function closeWatchlistModal() {
     document.getElementById('watchlistModal').classList.remove('active');
 }
 
-/**
- * Handle Watchlist Form Submit (Create & Update)
- */
 function handleWatchlistSubmit(e) {
     e.preventDefault();
 
@@ -817,7 +765,6 @@ function handleWatchlistSubmit(e) {
     const notes = document.getElementById('modalNotesInput').value.trim();
 
     let movieBase = JSON.parse(movieDataRaw);
-
     const existingIndex = state.watchlist.findIndex(m => m.id === movieId);
 
     if (existingIndex >= 0) {
@@ -846,9 +793,6 @@ function handleWatchlistSubmit(e) {
     closeWatchlistModal();
 }
 
-/**
- * Delete Operations
- */
 function openDeleteModal(movieId) {
     const movie = state.watchlist.find(m => m.id === movieId);
     if (!movie) return;
@@ -879,11 +823,7 @@ function confirmDeleteMovie() {
     }
 }
 
-
-/* ==========================================================================
-   STATS & ANALYTICS CALCULATOR
-   ========================================================================== */
-
+// Statistics & Analytics
 function renderStats() {
     const total = state.watchlist.length;
     const completed = state.watchlist.filter(m => m.status === 'Completed').length;
@@ -924,11 +864,7 @@ function renderStats() {
     }
 }
 
-
-/* ==========================================================================
-   EVENT LISTENERS & INTERACTIVITY
-   ========================================================================== */
-
+// Navigation & Event Listeners
 function setupNavigation() {
     const navButtons = document.querySelectorAll('.nav-btn');
     navButtons.forEach(btn => {
@@ -990,14 +926,10 @@ function setupEventListeners() {
     });
 
     document.getElementById('watchlistForm')?.addEventListener('submit', handleWatchlistSubmit);
-
     document.getElementById('confirmDeleteBtn')?.addEventListener('click', confirmDeleteMovie);
-
-    // Auth form submissions
     document.getElementById('loginForm')?.addEventListener('submit', handleLoginSubmit);
     document.getElementById('registerForm')?.addEventListener('submit', handleRegisterSubmit);
 
-    // Close modals on overlay background click
     document.querySelectorAll('.modal-overlay').forEach(overlay => {
         overlay.addEventListener('click', (e) => {
             if (e.target === overlay) {
@@ -1007,9 +939,7 @@ function setupEventListeners() {
     });
 }
 
-/**
- * Interactive Star Rating Picker Controls
- */
+// Interactive Star Rating Picker
 function setupStarPicker() {
     const stars = document.querySelectorAll('#starPickerContainer .star');
     stars.forEach(star => {
@@ -1046,11 +976,7 @@ function highlightStars(count) {
     });
 }
 
-
-/* ==========================================================================
-   TOAST NOTIFICATION ENGINE & UTILITIES
-   ========================================================================== */
-
+// Utilities & Toast Notifications
 function showToast(message, type = 'info') {
     const container = document.getElementById('toastContainer');
     if (!container) return;
