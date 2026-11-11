@@ -1,0 +1,74 @@
+/* ==========================================================================
+   MODAL DIALOGS & OVERLAYS MODULE
+   ========================================================================== */
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(4, 5, 8, 0.85);
+    backdrop-filter: blur(12px);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+.modal-overlay.active {
+    opacity: 1;
+    pointer-events: all;
+}
+
+.cyber-modal {
+    background: var(--bg-card);
+    border: 1px solid var(--primary-cyan);
+    border-radius: var(--radius-lg);
+    width: 100%;
+    max-width: 540px;
+    padding: 30px;
+    box-shadow: 0 0 35px var(--primary-cyan-glow);
+    position: relative;
+    transform: translateY(20px) scale(0.95);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.cyber-modal-sm {
+    max-width: 420px;
+}
+
+.cyber-modal-center {
+    text-align: center;
+}
+
+.modal-overlay.active .cyber-modal {
+    transform: translateY(0) scale(1);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.modal-title {
+    font-family: var(--font-heading);
+    font-size: 1.25rem;
+    color: var(--primary-cyan);
+}
+
+.modal-title-sm {
+    font-size: 1.1rem;
+}
+
+.modal-title-danger {
+    color: var(--glitch-pink);
+}

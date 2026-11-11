@@ -1,0 +1,161 @@
+/* ==========================================================================
+   REUSABLE UI COMPONENTS & SUBSECTIONS
+   ========================================================================== */
+
+/* Guide & Documentation Components */
+.guide-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 30px;
+    margin-bottom: 25px;
+    backdrop-filter: blur(10px);
+}
+
+.guide-subtitle {
+    font-family: var(--font-heading);
+    font-size: 1.15rem;
+    color: var(--secondary-purple);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.code-snippet-box {
+    background: #06070a;
+    border: 1px solid rgba(0, 240, 255, 0.2);
+    border-radius: var(--radius-sm);
+    padding: 16px;
+    font-family: monospace;
+    font-size: 0.85rem;
+    color: #38bdf8;
+    overflow-x: auto;
+    margin: 12px 0;
+}
+
+.poster-fallback {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #131522 0%, #1f2338 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    text-align: center;
+    color: var(--text-muted);
+}
+
+.poster-fallback i {
+    font-size: 3rem;
+    color: var(--primary-cyan);
+    margin-bottom: 12px;
+}
+
+/* Statistics Breakdown Card */
+.stat-breakdown-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 24px;
+    backdrop-filter: blur(10px);
+}
+
+.stat-breakdown-title {
+    font-family: var(--font-heading);
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.stat-breakdown-title i {
+    color: var(--primary-cyan);
+}
+
+/* Modal Internal Layout Components */
+.modal-movie-preview {
+    display: flex;
+    gap: 14px;
+    margin-bottom: 18px;
+    align-items: center;
+}
+
+.modal-movie-preview img {
+    width: 55px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+}
+
+.modal-movie-preview-info h4 {
+    color: #fff;
+    font-family: var(--font-heading);
+    font-size: 1rem;
+}
+
+.modal-movie-preview-info div {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-top: 4px;
+}
+
+.modal-footer-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 24px;
+}
+
+.modal-delete-content {
+    max-width: 420px;
+    text-align: center;
+}
+
+.delete-warning-icon {
+    font-size: 2.5rem;
+    color: var(--glitch-pink);
+    margin-bottom: 12px;
+}
+
+/* Auth Tabs Component */
+.auth-tabs-nav {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    background: rgba(0, 0, 0, 0.4);
+    padding: 4px;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+}
+
+.auth-tabs-nav .cyber-btn {
+    flex: 1;
+    padding: 8px;
+    font-size: 0.85rem;
+}
+
+.auth-error-badge {
+    color: var(--glitch-pink);
+    font-size: 0.85rem;
+    margin-bottom: 12px;
+    display: none;
+}
+
+/* Toolbar Controls */
+.sort-control-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.sort-label {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+}
+

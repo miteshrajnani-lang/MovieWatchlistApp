@@ -1,0 +1,191 @@
+/* ==========================================================================
+   LAYOUT CONTAINER & HEADER NAVIGATION MODULE
+   ========================================================================== */
+
+.app-container {
+    max-width: 1350px;
+    margin: 0 auto;
+    padding: 0 20px 60px 20px;
+}
+
+.cyber-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 24px 0;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 30px;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+/* Brand Logo */
+.brand-logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+    cursor: pointer;
+    position: relative;
+    user-select: none;
+}
+
+.logo-icon {
+    width: 44px;
+    height: 44px;
+    background: linear-gradient(135deg, var(--primary-cyan), var(--secondary-purple));
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    box-shadow: 0 0 15px var(--primary-cyan-glow);
+    animation: pulseGlow 3s infinite alternate;
+    transition: box-shadow var(--transition-normal);
+}
+
+.brand-logo:hover .logo-icon {
+    animation: iconCorrupt 1.5s steps(1) infinite;
+}
+
+/* Logo Typography & Glitch Layers */
+.logo-text {
+    font-family: var(--font-heading);
+    font-size: 1.6rem;
+    font-weight: 900;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    background: linear-gradient(90deg, #ffffff, var(--primary-cyan), var(--glitch-pink));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    position: relative;
+    display: inline-block;
+    transition: filter 0.3s ease;
+}
+
+.logo-text::before,
+.logo-text::after {
+    content: attr(data-text);
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    -webkit-text-fill-color: initial;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.logo-text::before {
+    color: var(--primary-cyan);
+    z-index: 1;
+}
+
+.logo-text::after {
+    color: var(--glitch-pink);
+    z-index: 2;
+}
+
+.brand-logo:hover .logo-text {
+    filter: brightness(1.15);
+    animation: digitalCorrupt 1.5s steps(1) infinite;
+}
+
+.brand-logo:hover .logo-text::before {
+    opacity: 0.35;
+    animation: corruptLayerA 1.5s steps(1) infinite;
+}
+
+.brand-logo:hover .logo-text::after {
+    opacity: 0.25;
+    animation: corruptLayerB 1.5s steps(1) infinite;
+}
+
+.logo-tag {
+    font-size: 0.65rem;
+    color: var(--primary-cyan);
+    border: 1px solid var(--primary-cyan);
+    padding: 2px 6px;
+    border-radius: 4px;
+    letter-spacing: 1.5px;
+    margin-left: 8px;
+    vertical-align: middle;
+}
+
+/* Cyber Navigation */
+.cyber-nav {
+    display: flex;
+    gap: 8px;
+    background: var(--bg-glass);
+    padding: 6px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+    backdrop-filter: blur(10px);
+}
+
+.nav-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-family: var(--font-heading);
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 10px 18px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: var(--transition-fast);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.nav-btn:hover {
+    color: var(--primary-cyan);
+    background: rgba(0, 240, 255, 0.08);
+}
+
+.nav-btn.active {
+    color: #08090d;
+    background: var(--primary-cyan);
+    font-weight: 800;
+    box-shadow: 0 0 15px var(--primary-cyan-glow);
+}
+
+/* Header Action Badges */
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.api-status-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color);
+    padding: 8px 14px;
+    border-radius: 30px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: var(--transition-fast);
+}
+
+.api-status-badge:hover {
+    border-color: var(--primary-cyan);
+    background: rgba(0, 240, 255, 0.1);
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--status-completed);
+    box-shadow: 0 0 8px var(--status-completed);
+}
+
+.status-dot.demo-mode {
+    background: var(--glitch-pink);
+    box-shadow: 0 0 8px var(--glitch-pink);
+}
