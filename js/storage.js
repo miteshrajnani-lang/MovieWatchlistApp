@@ -104,14 +104,6 @@ function loadApiKey() {
     if (savedKey) {
         state.apiKey = savedKey;
     }
-    updateApiBadge();
-}
-
-function updateApiBadge() {
-    const dot = document.getElementById('apiStatusDot');
-    const text = document.getElementById('apiStatusText');
-    if (dot) dot.classList.remove('demo-mode');
-    if (text) text.textContent = 'TMDB API Live';
 }
 
 function sanitizeWatchlistUrls() {
@@ -152,7 +144,7 @@ window.saveUsersDb = saveUsersDb;
 window.loadUserSession = loadUserSession;
 window.updateUserHeaderUI = updateUserHeaderUI;
 window.loadApiKey = loadApiKey;
-window.updateApiBadge = updateApiBadge;
+window.updateApiBadge = () => {};
 window.sanitizeWatchlistUrls = sanitizeWatchlistUrls;
 window.saveWatchlist = saveWatchlist;
 window.updateNavWatchlistCount = updateNavWatchlistCount;

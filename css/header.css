@@ -152,40 +152,9 @@
     box-shadow: 0 0 15px var(--primary-cyan-glow);
 }
 
-/* Header Action Badges */
+/* Header Action Container */
 .header-actions {
     display: flex;
     align-items: center;
     gap: 12px;
-}
-
-.api-status-badge {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--border-color);
-    padding: 8px 14px;
-    border-radius: 30px;
-    font-size: 0.8rem;
-    cursor: pointer;
-    transition: var(--transition-fast);
-}
-
-.api-status-badge:hover {
-    border-color: var(--primary-cyan);
-    background: rgba(0, 240, 255, 0.1);
-}
-
-.status-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--status-completed);
-    box-shadow: 0 0 8px var(--status-completed);
-}
-
-.status-dot.demo-mode {
-    background: var(--glitch-pink);
-    box-shadow: 0 0 8px var(--glitch-pink);
 }
