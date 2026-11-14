@@ -1,6 +1,7 @@
 /* ==========================================================================
    RESPONSIVE DESIGN BREAKPOINTS (TABLETS & MOBILE)
    ========================================================================== */
+
 @media (max-width: 960px) {
     .discover-layout {
         grid-template-columns: 1fr;
@@ -11,9 +12,19 @@
         position: static;
         top: auto;
     }
+
+    .filter-group {
+        overflow-x: auto;
+        padding-bottom: 4px;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .stats-panels-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
-/* Mobile Devices (<= 768px) */
+/* Tablet & Mobile Devices (<= 768px) */
 @media (max-width: 768px) {
     .app-container {
         padding: 0 16px 40px 16px;
@@ -22,8 +33,8 @@
     .cyber-header {
         flex-direction: column;
         align-items: stretch;
-        gap: 16px;
-        padding: 16px 0;
+        gap: 14px;
+        padding: 14px 0;
         margin-bottom: 20px;
     }
 
@@ -38,6 +49,11 @@
         -webkit-overflow-scrolling: touch;
         gap: 4px;
         padding: 4px;
+        scrollbar-width: none;
+    }
+
+    .cyber-nav::-webkit-scrollbar {
+        display: none;
     }
 
     .nav-btn {
@@ -56,17 +72,17 @@
     }
 
     .hero-section {
-        padding: 24px 18px;
-        margin-bottom: 24px;
+        padding: 22px 18px;
+        margin-bottom: 20px;
     }
 
     .hero-title {
-        font-size: 1.5rem;
+        font-size: 1.45rem;
     }
 
     .hero-subtitle {
-        font-size: 0.88rem;
-        margin-bottom: 18px;
+        font-size: 0.85rem;
+        margin-bottom: 16px;
     }
 
     .search-box-wrapper {
@@ -74,8 +90,13 @@
         gap: 10px;
     }
 
+    .search-box-wrapper .cyber-btn {
+        width: 100%;
+        justify-content: center;
+    }
+
     .cyber-input {
-        padding: 12px 14px 12px 42px;
+        padding: 11px 14px 11px 40px;
         font-size: 0.88rem;
     }
 
@@ -86,7 +107,7 @@
     }
 
     .movie-card .movie-title {
-        font-size: 0.95rem;
+        font-size: 0.92rem;
     }
 
     .movie-card .movie-overview {
@@ -101,19 +122,32 @@
         padding: 10px;
     }
 
-    .stats-grid {
+    .stats-journal-ledger {
         grid-template-columns: repeat(2, 1fr);
-        gap: 12px;
+    }
+
+    .stat-journal-item,
+    .stat-card {
+        padding: 18px 16px;
     }
 
     .stat-number {
-        font-size: 1.8rem;
+        font-size: 1.75rem;
     }
 
     .section-toolbar {
         flex-direction: column;
-        align-items: flex-start;
+        align-items: stretch;
         gap: 12px;
+    }
+
+    .sort-control-group {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .sort-control-group .cyber-select {
+        flex: 1;
     }
 
     .cyber-modal {
@@ -122,20 +156,29 @@
     }
 
     .movie-detail-hero {
-        height: 200px;
+        height: 220px;
     }
 
     .movie-detail-title {
-        font-size: 1.3rem;
+        font-size: 1.4rem;
     }
 
     .movie-detail-body {
-        padding: 16px;
+        padding: 20px 16px;
     }
 
     .movie-detail-overview {
-        font-size: 0.88rem;
-        line-height: 1.6;
+        font-size: 0.9rem;
+        line-height: 1.65;
+    }
+
+    .movie-detail-actions {
+        flex-direction: column;
+    }
+
+    .movie-detail-actions .cyber-btn {
+        width: 100%;
+        justify-content: center;
     }
 }
 
@@ -150,8 +193,19 @@
         gap: 10px;
     }
 
-    .stats-grid {
+    .stats-journal-ledger {
         grid-template-columns: 1fr;
+    }
+
+    .stat-journal-item,
+    .stat-card {
+        border-right: none;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .stat-journal-item:last-child,
+    .stat-card:last-child {
+        border-bottom: none;
     }
 
     .nav-btn {
@@ -160,6 +214,10 @@
     }
 
     .logo-text {
-        font-size: 1.3rem;
+        font-size: 1.25rem;
+    }
+
+    .status-legend-grid {
+        grid-template-columns: 1fr;
     }
 }

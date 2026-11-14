@@ -8,8 +8,9 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(4, 5, 8, 0.85);
-    backdrop-filter: blur(12px);
+    background: rgba(4, 5, 8, 0.82);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     z-index: 10000;
     display: flex;
     align-items: center;
@@ -17,7 +18,7 @@
     padding: 20px;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.3s ease;
+    transition: opacity 0.25s var(--ease-out);
 }
 
 .modal-overlay.active {
@@ -26,16 +27,16 @@
 }
 
 .cyber-modal {
-    background: var(--bg-card);
-    border: 1px solid var(--primary-cyan);
+    background: #0d0f17;
+    border: 1px solid rgba(255, 255, 255, 0.09);
     border-radius: var(--radius-lg);
     width: 100%;
-    max-width: 540px;
-    padding: 30px;
-    box-shadow: 0 0 35px var(--primary-cyan-glow);
+    max-width: 520px;
+    padding: 28px 30px;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(0, 240, 255, 0.1);
     position: relative;
-    transform: translateY(20px) scale(0.95);
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateY(16px) scale(0.97);
+    transition: transform 0.25s var(--ease-out);
 }
 
 .cyber-modal-sm {
@@ -54,19 +55,24 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 20px;
-    padding-bottom: 12px;
-    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 22px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
 }
 
 .modal-title {
     font-family: var(--font-heading);
-    font-size: 1.25rem;
-    color: var(--primary-cyan);
+    font-size: 1.15rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .modal-title-sm {
-    font-size: 1.1rem;
+    font-size: 1.05rem;
 }
 
 .modal-title-danger {

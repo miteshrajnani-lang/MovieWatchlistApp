@@ -67,8 +67,16 @@ function handleWatchlistSubmit(e) {
         };
         showToast(`Updated "${movieBase.title}" in Watchlist!`, 'success');
     } else {
+        // Ensure runtime is attached if cached or available
+        let runtimeVal = movieBase.runtime;
+        if (runtimeVal === undefined && window.runtimeCache && window.runtimeCache.has(movieId)) {
+            const cached = window.runtimeCache.get(movieId);
+            runtimeVal = typeof cached === 'object' ? cached.runtime : cached;
+        }
+
         const newItem = {
             ...movieBase,
+            runtime: runtimeVal,
             status,
             personalRating,
             notes,
@@ -76,6 +84,19 @@ function handleWatchlistSubmit(e) {
         };
         state.watchlist.unshift(newItem);
         showToast(`Added "${movieBase.title}" to Watchlist!`, 'success');
+
+        // If runtime is still missing, fetch in background and persist
+        if (newItem.runtime === undefined && state.apiKey && window.ApiService) {
+            window.ApiService.getRuntime(state.apiKey, movieId).then(rt => {
+                if (rt) {
+                    newItem.runtime = rt;
+                    saveWatchlist();
+                    if (typeof updateMovieCardRuntime === 'function') {
+                        updateMovieCardRuntime(movieId, rt);
+                    }
+                }
+            }).catch(() => {});
+        }
     }
 
     saveWatchlist();

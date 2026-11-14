@@ -1,41 +1,59 @@
 /* ==========================================================================
    FORMS & INPUT CONTROLS MODULE
+   Pixel-Perfect Alignment & Refined Inputs
    ========================================================================== */
 
-/* Search Box & Inputs */
+/* Search Box Wrapper */
 .search-box-wrapper {
     display: flex;
-    gap: 12px;
-    max-width: 750px;
+    gap: 10px;
+    max-width: 680px;
     position: relative;
+    align-items: center;
 }
 
 .search-input-group {
     flex: 1;
     position: relative;
+    display: flex;
+    align-items: center;
 }
 
 .search-icon {
     position: absolute;
-    left: 16px;
+    left: 15px;
     top: 50%;
     transform: translateY(-50%);
     color: var(--primary-cyan);
-    font-size: 1.1rem;
+    font-size: 0.95rem;
     pointer-events: none;
+    opacity: 0.85;
 }
 
+/* Base Cyber Input */
 .cyber-input {
     width: 100%;
-    background: rgba(8, 9, 13, 0.85);
+    height: 46px; /* Pixel-perfect matching height with .cyber-btn */
+    background: rgba(10, 13, 20, 0.92);
     border: 1px solid var(--border-color);
     color: var(--text-main);
-    padding: 14px 16px 14px 46px;
+    padding: 0 16px 0 44px;
     font-family: var(--font-body);
-    font-size: 0.95rem;
-    border-radius: var(--radius-md);
+    font-size: 0.9rem;
+    border-radius: var(--radius-sm);
     outline: none;
     transition: var(--transition-fast);
+}
+
+.cyber-input:focus {
+    border-color: rgba(0, 240, 255, 0.5);
+    background: rgba(14, 18, 28, 0.98);
+    box-shadow: 0 0 0 2px rgba(0, 240, 255, 0.12);
+}
+
+.cyber-input::placeholder {
+    color: #64748b;
+    font-size: 0.88rem;
 }
 
 .cyber-input-bare {
@@ -47,115 +65,120 @@
     padding-right: 42px;
 }
 
-.cyber-input:focus {
-    border-color: var(--primary-cyan);
-    box-shadow: 0 0 15px var(--primary-cyan-glow);
-    background: rgba(13, 14, 22, 0.95);
-}
-
-/* Select Dropdown */
+/* Cyber Select Dropdown */
 .cyber-select {
-    background: rgba(8, 9, 13, 0.9);
+    height: 38px;
+    background: rgba(10, 13, 20, 0.95);
     border: 1px solid var(--border-color);
-    color: var(--text-main);
-    padding: 8px 14px;
+    color: #e2e8f0;
+    padding: 0 12px;
     border-radius: var(--radius-sm);
     font-family: var(--font-body);
-    font-size: 0.85rem;
+    font-size: 0.82rem;
     outline: none;
     cursor: pointer;
     transition: var(--transition-fast);
 }
 
-.cyber-select-block {
-    width: 100%;
-    padding: 12px;
+.cyber-select:focus {
+    border-color: rgba(0, 240, 255, 0.5);
+    box-shadow: 0 0 0 2px rgba(0, 240, 255, 0.1);
 }
 
-.cyber-select:focus {
-    border-color: var(--primary-cyan);
+.cyber-select-block {
+    width: 100%;
+    height: 44px;
+    padding: 0 14px;
 }
 
 /* Textarea */
 .cyber-textarea {
     width: 100%;
-    background: rgba(8, 9, 13, 0.85);
+    background: rgba(10, 13, 20, 0.95);
     border: 1px solid var(--border-color);
     color: var(--text-main);
-    padding: 12px;
+    padding: 12px 14px;
     font-family: var(--font-body);
-    font-size: 0.9rem;
+    font-size: 0.88rem;
     border-radius: var(--radius-sm);
     outline: none;
     resize: vertical;
     min-height: 90px;
+    line-height: 1.5;
     transition: var(--transition-fast);
 }
 
 .cyber-textarea:focus {
-    border-color: var(--primary-cyan);
+    border-color: rgba(0, 240, 255, 0.5);
+    box-shadow: 0 0 0 2px rgba(0, 240, 255, 0.1);
+}
+
+.cyber-textarea::placeholder {
+    color: #64748b;
 }
 
 /* Form Groups & Labels */
 .form-group {
-    margin-bottom: 18px;
+    margin-bottom: 16px;
 }
 
 .form-label {
     display: block;
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     font-weight: 600;
-    color: var(--text-muted);
+    color: #94a3b8;
     margin-bottom: 6px;
+    letter-spacing: 0.3px;
 }
 
 /* Interactive Star Rating Picker */
 .star-picker {
     display: flex;
     gap: 8px;
-    font-size: 1.6rem;
-    color: #475569;
+    font-size: 1.5rem;
+    color: #334155;
     cursor: pointer;
-    margin: 8px 0 18px 0;
+    margin: 6px 0 14px 0;
 }
 
 .star-picker .star {
     transition: color 0.15s ease, transform 0.15s ease;
+    user-select: none;
 }
 
 .star-picker .star:hover,
 .star-picker .star.active {
     color: var(--star-gold);
-    transform: scale(1.2);
-    text-shadow: 0 0 10px rgba(255, 183, 3, 0.5);
+    transform: scale(1.15);
+    text-shadow: 0 0 8px rgba(251, 191, 36, 0.4);
 }
 
 /* Password Field Wrapper & Visibility Toggle */
 .password-input-wrapper {
     position: relative;
+    display: flex;
+    align-items: center;
 }
 
 .password-toggle-btn {
     position: absolute;
-    right: 12px;
+    right: 10px;
     top: 50%;
     transform: translateY(-50%);
     background: transparent;
     border: none;
-    color: var(--primary-cyan);
-    font-size: 1.05rem;
+    color: #94a3b8;
+    font-size: 0.95rem;
     cursor: pointer;
-    padding: 4px;
+    padding: 6px;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.2s ease;
-    text-shadow: 0 0 8px var(--primary-cyan-glow);
+    transition: var(--transition-fast);
 }
 
 .password-toggle-btn:hover {
-    color: #ffffff;
-    transform: translateY(-50%) scale(1.15);
+    color: var(--primary-cyan);
 }
 
 input[type="password"]::-ms-reveal,

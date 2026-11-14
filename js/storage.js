@@ -72,6 +72,14 @@ function loadUserSession() {
     }
 
     sanitizeWatchlistUrls();
+    
+    // Seed runtime cache from existing watchlist
+    state.watchlist.forEach(m => {
+        if (typeof m.runtime === 'number' && m.runtime > 0 && window.runtimeCache) {
+            window.runtimeCache.set(m.id, m.runtime);
+        }
+    });
+
     updateUserHeaderUI();
     updateNavWatchlistCount();
 }
@@ -137,6 +145,57 @@ function updateNavWatchlistCount() {
     if (badge) badge.textContent = state.watchlist.length;
 }
 
+/**
+ * Safe, non-destructive migration engine:
+ * Retrieves missing runtimes for previously saved movies and stores them directly
+ * in the existing movie record without modifying ratings, notes, dates, or other fields.
+ */
+async function enrichWatchlistRuntimes() {
+    if (!state.apiKey || !state.watchlist || state.watchlist.length === 0) return;
+
+    const pending = state.watchlist.filter(m => m.id && (m.runtime === undefined || m.runtime === null));
+    if (pending.length === 0) return;
+
+    let hasUpdates = false;
+    const batchSize = 3;
+
+    for (let i = 0; i < pending.length; i += batchSize) {
+        const batch = pending.slice(i, i + batchSize);
+        await Promise.all(batch.map(async (movie) => {
+            try {
+                let runtime = 0;
+                if (window.runtimeCache && window.runtimeCache.has(movie.id)) {
+                    const cached = window.runtimeCache.get(movie.id);
+                    runtime = typeof cached === 'object' ? cached.runtime : cached;
+                } else if (window.ApiService) {
+                    const details = await window.ApiService.fetchMovieDetails(state.apiKey, movie.id);
+                    runtime = details.runtime || 0;
+                    if (details.tagline && !movie.tagline) movie.tagline = details.tagline;
+                }
+
+                if (typeof runtime === 'number') {
+                    // Safe property assignment: preserves all existing fields intact!
+                    movie.runtime = runtime;
+                    hasUpdates = true;
+                    if (typeof updateMovieCardRuntime === 'function') {
+                        updateMovieCardRuntime(movie.id, movie.runtime);
+                    }
+                }
+            } catch (err) {
+                console.warn(`[Watchlist Migration] Could not retrieve runtime for movie ${movie.id}:`, err);
+            }
+        }));
+
+        await new Promise(resolve => setTimeout(resolve, 60));
+    }
+
+    if (hasUpdates) {
+        saveWatchlist();
+        if (typeof renderStats === 'function') renderStats();
+        if (typeof renderWatchlist === 'function') renderWatchlist();
+    }
+}
+
 // Global Exposure
 window.StorageService = StorageService;
 window.getUsersDb = getUsersDb;
@@ -148,3 +207,4 @@ window.updateApiBadge = () => {};
 window.sanitizeWatchlistUrls = sanitizeWatchlistUrls;
 window.saveWatchlist = saveWatchlist;
 window.updateNavWatchlistCount = updateNavWatchlistCount;
+window.enrichWatchlistRuntimes = enrichWatchlistRuntimes;

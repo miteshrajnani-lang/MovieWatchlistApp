@@ -1,70 +1,91 @@
 /* ==========================================================================
    TOOLBAR & FILTER BADGES MODULE
+   Cohesive Controls & Balanced Hierarchy
    ========================================================================== */
 
 .section-toolbar {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 25px;
+    margin-bottom: 20px;
     flex-wrap: wrap;
-    gap: 16px;
+    gap: 14px;
+    background: rgba(14, 17, 26, 0.45);
+    border: 1px solid var(--border-color);
+    padding: 10px 14px;
+    border-radius: var(--radius-md);
 }
 
 .section-title {
     font-family: var(--font-heading);
-    font-size: 1.4rem;
+    font-size: 1.15rem;
     font-weight: 800;
     display: flex;
     align-items: center;
     gap: 10px;
     letter-spacing: 0.5px;
+    color: #ffffff;
 }
 
 .section-title::before {
     content: "";
-    width: 4px;
-    height: 22px;
+    width: 3px;
+    height: 16px;
     background: var(--primary-cyan);
-    box-shadow: 0 0 10px var(--primary-cyan);
+    box-shadow: 0 0 8px var(--primary-cyan-glow);
     display: inline-block;
     border-radius: 2px;
 }
 
+/* Unified Filter Buttons */
 .filter-group {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
     flex-wrap: wrap;
 }
 
 .filter-badge {
-    background: var(--bg-card);
+    background: rgba(255, 255, 255, 0.03);
     border: 1px solid var(--border-color);
-    color: var(--text-muted);
-    padding: 8px 14px;
-    border-radius: 20px;
-    font-size: 0.8rem;
+    color: #94a3b8;
+    padding: 6px 12px;
+    border-radius: var(--radius-sm);
+    font-size: 0.75rem;
     font-weight: 600;
+    font-family: var(--font-body);
     cursor: pointer;
     transition: var(--transition-fast);
+    user-select: none;
+    letter-spacing: 0.2px;
 }
 
 .filter-badge:hover {
-    border-color: var(--primary-cyan);
-    color: var(--primary-cyan);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.06);
 }
 
 .filter-badge.active {
-    background: var(--primary-cyan);
-    color: #08090d;
-    border-color: var(--primary-cyan);
+    background: rgba(0, 240, 255, 0.12);
+    color: var(--primary-cyan);
+    border-color: rgba(0, 240, 255, 0.45);
     font-weight: 700;
-    box-shadow: 0 0 12px var(--primary-cyan-glow);
+    box-shadow: 0 2px 8px rgba(0, 240, 255, 0.15);
 }
 
-.results-count-badge {
-    font-size: 0.82rem;
-    color: var(--text-muted);
-    font-family: var(--font-body);
+/* Integrated Sort Control Group */
+.sort-control-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+}
+
+.sort-label {
+    font-size: 0.75rem;
+    color: #64748b;
+    font-weight: 600;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
 }
