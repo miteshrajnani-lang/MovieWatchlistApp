@@ -101,7 +101,6 @@ const WatchlistDatabaseService = {
         if (updates.personalRating !== undefined) columnMap.personal_rating = updates.personalRating;
         if (updates.personal_rating !== undefined) columnMap.personal_rating = updates.personal_rating;
         if (updates.notes !== undefined) columnMap.notes = updates.notes;
-        
         if (updates.dateAdded !== undefined) {
             const parsed = new Date(updates.dateAdded);
             if (isNaN(parsed.getTime())) throw new Error(`Invalid dateAdded value: "${updates.dateAdded}"`);
@@ -241,7 +240,7 @@ const WatchlistDatabaseService = {
         const isMovieDuplicate =
             error.code === '23505' &&
             ((typeof error.message === 'string' && error.message.includes('watchlist_items_user_movie_unique')) ||
-             (typeof error.details === 'string' && /Key\s+\(user_id,\s*tmdb_id\)=\([^)]+\)\s+already exists/i.test(error.details)));
+                (typeof error.details === 'string' && /Key\s+\(user_id,\s*tmdb_id\)=\([^)]+\)\s+already exists/i.test(error.details)));
 
         if (!isMovieDuplicate) {
             // A different unique constraint was violated — do not misidentify this
