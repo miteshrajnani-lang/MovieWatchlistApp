@@ -9,7 +9,8 @@
         content="A cyberpunk-themed Movie Watchlist web application powered by TMDB API and LocalStorage CRUD operations.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800;900&family=Space+Grotesk:wght@300;400;500;600;700&display=swap">
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800;900&family=Space+Grotesk:wght@300;400;500;600;700&display=swap">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <!-- Modular CSS Stylesheets -->
@@ -135,7 +136,8 @@
                     <h2 class="stats-journal-title">
                         <i class="fa-solid fa-chart-pie"></i> Watchlist Statistics
                     </h2>
-                    <p class="stats-journal-subtitle">Overview of your viewing habits, watch time, and genre preferences</p>
+                    <p class="stats-journal-subtitle">Overview of your viewing habits, watch time, and genre preferences
+                    </p>
                 </div>
 
                 <div class="stats-journal-ledger stats-grid">
@@ -159,7 +161,8 @@
                         <div class="stat-number stat-number-hours" id="statHoursEstimated">0 hrs</div>
                         <div class="stat-label" id="statHoursLabel">Completed Watch Time</div>
                         <div class="stat-meta-note" id="statTotalWatchTime">Library: 0 hrs</div>
-                        <div class="stat-partial-indicator" id="statWatchTimePartialNotice" style="display: none;"></div>
+                        <div class="stat-partial-indicator" id="statWatchTimePartialNotice" style="display: none;">
+                        </div>
                     </div>
                 </div>
 
@@ -382,8 +385,13 @@
     <!-- Toast Notifications Container -->
     <div class="toast-container" id="toastContainer"></div>
 
+    <!-- Supabase Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
     <!-- Modular Application Scripts -->
     <script src="js/constants.js"></script>
+    <script src="js/supabase-client.js"></script>
+    <script src="js/db.js"></script>
     <script src="js/utils.js"></script>
     <script src="js/state.js"></script>
     <script src="js/modal-manager.js"></script>
