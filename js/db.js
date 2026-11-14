@@ -68,7 +68,7 @@ const WatchlistDatabaseService = {
             genres: Array.isArray(movie.genres) ? movie.genres : [],
             runtime: typeof movie.runtime === 'number' && !isNaN(movie.runtime) && movie.runtime >= 0 ? movie.runtime : null,
             tagline: movie.tagline !== undefined ? movie.tagline : null,
-            status: movie.status || 'Plan to Watch',
+            status: ['Plan to Watch', 'Watching', 'Completed'].includes(movie.status) ? movie.status : 'Plan to Watch',
             personal_rating: typeof movie.personalRating === 'number' && !isNaN(movie.personalRating) ? movie.personalRating : (parseInt(movie.personalRating, 10) || 0),
             notes: movie.notes !== undefined && movie.notes !== null ? String(movie.notes) : '',
             date_added: dateAddedIso
@@ -95,7 +95,9 @@ const WatchlistDatabaseService = {
         if (updates.genres !== undefined) columnMap.genres = updates.genres;
         if (updates.runtime !== undefined) columnMap.runtime = updates.runtime;
         if (updates.tagline !== undefined) columnMap.tagline = updates.tagline;
-        if (updates.status !== undefined) columnMap.status = updates.status;
+        if (updates.status !== undefined) {
+            columnMap.status = ['Plan to Watch', 'Watching', 'Completed'].includes(updates.status) ? updates.status : 'Plan to Watch';
+        }
         if (updates.personalRating !== undefined) columnMap.personal_rating = updates.personalRating;
         if (updates.personal_rating !== undefined) columnMap.personal_rating = updates.personal_rating;
         if (updates.notes !== undefined) columnMap.notes = updates.notes;
