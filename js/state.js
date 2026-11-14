@@ -4,6 +4,9 @@
 
 const state = {
     currentUser: null,
+    supabaseUserId: null,
+    sessionEpoch: 0,
+    watchlistLoadingStatus: 'loaded', // 'loading' | 'loaded' | 'error'
     watchlist: [],
     apiKey: (window.CONFIG && window.CONFIG.DEFAULT_API_KEY) || '7f631300a2ef07bafe2c64d6214f99c2',
     currentView: 'discover-view',

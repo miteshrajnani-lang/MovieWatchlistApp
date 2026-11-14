@@ -18,6 +18,11 @@ const STORAGE_KEYS = {
     API_KEY: 'cyber_tmdb_api_key'
 };
 
+const AUTH_CONFIG = {
+    SYNTHETIC_EMAIL_DOMAIN: 'watchathon.app',
+    USERNAME_REGEX: /^[a-zA-Z0-9_]{3,50}$/
+};
+
 const TMDB_GENRES = {
     28: "Action",
     12: "Adventure",
@@ -63,6 +68,7 @@ const FILTER_OPTIONS = {
 // Global Exposure for full backward compatibility
 window.CONFIG = CONFIG;
 window.STORAGE_KEYS = STORAGE_KEYS;
+window.AUTH_CONFIG = AUTH_CONFIG;
 window.TMDB_GENRES = TMDB_GENRES;
 window.FILTER_OPTIONS = FILTER_OPTIONS;
 

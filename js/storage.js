@@ -59,20 +59,142 @@ function saveUsersDb(db) {
     StorageService.saveUsersDb(db);
 }
 
-function loadUserSession() {
-    const savedUser = StorageService.getCurrentUser();
-    const usersDb = StorageService.getUsersDb();
-
-    if (savedUser && usersDb[savedUser]) {
-        state.currentUser = savedUser;
-        state.watchlist = usersDb[savedUser].watchlist || [];
-    } else {
-        state.currentUser = null;
-        state.watchlist = StorageService.getLegacyWatchlist();
+async function fetchAndSetUserWatchlist(userId, epoch) {
+    // ① Pre-flight staleness guard: return false without touching any state.
+    if (state.sessionEpoch !== epoch || state.supabaseUserId !== userId) {
+        console.warn('fetchAndSetUserWatchlist: called with a stale epoch/userId; ignoring.');
+        return false;
     }
 
+    // ② Treat an unavailable DB service as a genuine loading failure for the active session.
+    //    Session currency is already guaranteed by the guard above.
+    if (!window.DB || typeof window.DB.fetchUserWatchlist !== 'function') {
+        const dbErr = new Error('Database service (window.DB) is not available.');
+        state.watchlistLoadingStatus = 'error';
+        state.watchlist = [];
+        updateNavWatchlistCount();
+        console.error('fetchAndSetUserWatchlist:', dbErr.message);
+        showToast('Could not load your saved watchlist. Please check your connection.', 'info');
+        throw dbErr;
+    }
+
+    state.watchlistLoadingStatus = 'loading';
+    try {
+        const remoteList = await window.DB.fetchUserWatchlist(userId);
+
+        // Guard against stale asynchronous responses if session changed or user logged out
+        if (state.sessionEpoch !== epoch || state.supabaseUserId !== userId) {
+            console.warn('Ignoring stale fetchUserWatchlist response for previous session epoch.');
+            return false;
+        }
+
+        state.watchlist = Array.isArray(remoteList) ? remoteList : [];
+        state.watchlistLoadingStatus = 'loaded';
+
+        sanitizeWatchlistUrls();
+
+        // Seed runtime cache from loaded watchlist
+        state.watchlist.forEach(m => {
+            if (typeof m.runtime === 'number' && m.runtime > 0 && window.runtimeCache) {
+                window.runtimeCache.set(m.id, m.runtime);
+            }
+        });
+
+        updateNavWatchlistCount();
+        return true;
+    } catch (err) {
+        // If session is still current, mark error and surface to user
+        if (state.sessionEpoch === epoch && state.supabaseUserId === userId) {
+            state.watchlistLoadingStatus = 'error';
+            state.watchlist = [];
+            updateNavWatchlistCount();
+            console.error('Failed to load user watchlist from database:', err);
+            showToast('Could not load your saved watchlist. Please check your connection.', 'info');
+        }
+        throw err;
+    }
+}
+
+async function loadUserSession() {
+    // 1. Establish session epoch before any asynchronous call starts
+    state.sessionEpoch = (state.sessionEpoch || 0) + 1;
+    const restorationEpoch = state.sessionEpoch;
+
+    if (window.supabaseClient) {
+        try {
+            const { data: { session }, error } = await window.supabaseClient.auth.getSession();
+
+            // Check if epoch changed while waiting for getSession
+            if (state.sessionEpoch !== restorationEpoch) {
+                console.warn('Session restoration aborted: epoch changed during getSession.');
+                return;
+            }
+
+            if (!error && session && session.user) {
+                // Strictly fetch and validate username from profiles table
+                let resolvedUsername = null;
+                try {
+                    const { data: profile, error: profileErr } = await window.supabaseClient
+                        .from('profiles')
+                        .select('username')
+                        .eq('id', session.user.id)
+                        .maybeSingle();
+
+                    if (!profileErr && profile && profile.username && profile.username.trim() !== '') {
+                        resolvedUsername = profile.username.trim();
+                    }
+                } catch (pErr) {
+                    console.error('Could not query profile on session restoration:', pErr);
+                }
+
+                // Check if epoch changed while waiting for profile query
+                if (state.sessionEpoch !== restorationEpoch) {
+                    console.warn('Session restoration aborted: epoch changed during profile query.');
+                    return;
+                }
+
+                if (resolvedUsername) {
+                    state.supabaseUserId = session.user.id;
+                    state.currentUser = resolvedUsername;
+
+                    updateUserHeaderUI();
+
+                    // Load user's Supabase watchlist using the established restoration epoch
+                    try {
+                        await fetchAndSetUserWatchlist(session.user.id, restorationEpoch);
+                    } catch (loadErr) {
+                        // User remains authenticated; watchlistLoadingStatus is set to 'error'
+                    }
+                    return;
+                } else {
+                    // Profile is missing, query failed, or username is empty: sign out incomplete session
+                    console.warn('Session found but profile is incomplete/missing. Signing out session.');
+                    try {
+                        await window.supabaseClient.auth.signOut();
+                    } catch (soErr) {
+                        console.error('Error signing out incomplete session:', soErr);
+                    }
+                }
+            }
+        } catch (err) {
+            console.warn('Error fetching Supabase session:', err);
+        }
+    }
+
+    // Check if epoch changed before applying fallback
+    if (state.sessionEpoch !== restorationEpoch) {
+        console.warn('Session restoration aborted: epoch changed before fallback.');
+        return;
+    }
+
+    // Fallback: If not authenticated or profile invalid, keep anonymous state
+    state.currentUser = null;
+    state.supabaseUserId = null;
+    state.watchlistLoadingStatus = 'loaded';
+    state.watchlist = StorageService.getLegacyWatchlist();
+
     sanitizeWatchlistUrls();
-    
+
     // Seed runtime cache from existing watchlist
     state.watchlist.forEach(m => {
         if (typeof m.runtime === 'number' && m.runtime > 0 && window.runtimeCache) {
@@ -83,6 +205,10 @@ function loadUserSession() {
     updateUserHeaderUI();
     updateNavWatchlistCount();
 }
+
+
+
+
 
 function updateUserHeaderUI() {
     const container = document.getElementById('userBadgeContainer');
@@ -146,6 +272,39 @@ function updateNavWatchlistCount() {
 }
 
 /**
+ * Retry loading the user's watchlist from Supabase if previous attempt failed
+ */
+async function retryWatchlistLoad() {
+    if (!state.supabaseUserId) {
+        console.warn('retryWatchlistLoad: No authenticated user session.');
+        return;
+    }
+
+    state.sessionEpoch = (state.sessionEpoch || 0) + 1;
+    const currentEpoch = state.sessionEpoch;
+    const targetUserId = state.supabaseUserId;
+
+    try {
+        const applied = await fetchAndSetUserWatchlist(targetUserId, currentEpoch);
+        // Verify result was actually applied to the current user and epoch
+        if (applied && state.sessionEpoch === currentEpoch && state.supabaseUserId === targetUserId) {
+            if (typeof renderWatchlist === 'function') renderWatchlist();
+            if (typeof renderDiscoverGrid === 'function') renderDiscoverGrid();
+            if (typeof renderStats === 'function') renderStats();
+            showToast('Watchlist loaded successfully!', 'success');
+        } else {
+            console.warn('retryWatchlistLoad: Result was not applied due to session change.');
+        }
+    } catch (err) {
+        console.error('retryWatchlistLoad failed:', err);
+        if (state.sessionEpoch === currentEpoch && state.supabaseUserId === targetUserId) {
+            if (typeof renderWatchlist === 'function') renderWatchlist();
+        }
+    }
+}
+
+
+/**
  * Safe, non-destructive migration engine:
  * Retrieves missing runtimes for previously saved movies and stores them directly
  * in the existing movie record without modifying ratings, notes, dates, or other fields.
@@ -200,11 +359,13 @@ async function enrichWatchlistRuntimes() {
 window.StorageService = StorageService;
 window.getUsersDb = getUsersDb;
 window.saveUsersDb = saveUsersDb;
+window.fetchAndSetUserWatchlist = fetchAndSetUserWatchlist;
 window.loadUserSession = loadUserSession;
 window.updateUserHeaderUI = updateUserHeaderUI;
 window.loadApiKey = loadApiKey;
-window.updateApiBadge = () => {};
+window.updateApiBadge = () => { };
 window.sanitizeWatchlistUrls = sanitizeWatchlistUrls;
 window.saveWatchlist = saveWatchlist;
 window.updateNavWatchlistCount = updateNavWatchlistCount;
+window.retryWatchlistLoad = retryWatchlistLoad;
 window.enrichWatchlistRuntimes = enrichWatchlistRuntimes;

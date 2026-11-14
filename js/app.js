@@ -6,12 +6,34 @@ document.addEventListener('DOMContentLoaded', () => {
     initApp();
 });
 
-function initApp() {
+async function initApp() {
     loadApiKey();
-    loadUserSession();
     setupNavigation();
     setupEventListeners();
     setupStarPicker();
+
+    // Attach reactive auth change listener immediately before awaiting restoration
+    // to ensure no auth transitions during startup are missed, while avoiding deadlocks.
+    if (window.supabaseClient && window.supabaseClient.auth) {
+        window.supabaseClient.auth.onAuthStateChange((event, session) => {
+            // Avoid executing blocking database queries directly inside the auth callback.
+            // When user signs out in another tab or programmatically:
+            if (event === 'SIGNED_OUT') {
+                state.sessionEpoch = (state.sessionEpoch || 0) + 1;
+                state.currentUser = null;
+                state.supabaseUserId = null;
+                state.watchlistLoadingStatus = 'loaded';
+                state.watchlist = StorageService.getLegacyWatchlist();
+                updateUserHeaderUI();
+                renderWatchlist();
+                renderDiscoverGrid();
+                renderStats();
+            }
+        });
+    }
+
+    // Await Supabase session restoration before rendering views
+    await loadUserSession();
 
     loadInitialDiscoverMovies();
     renderWatchlist();
@@ -21,6 +43,8 @@ function initApp() {
         enrichWatchlistRuntimes();
     }
 }
+
+
 
 // Unified Namespace for clean modular access
 window.App = {

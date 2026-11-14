@@ -32,6 +32,20 @@ function renderWatchlist() {
         list.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
     }
 
+    if (state.watchlistLoadingStatus === 'error') {
+        grid.innerHTML = `
+            <div style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: var(--text-muted);">
+                <i class="fa-solid fa-triangle-exclamation" style="font-size: 3rem; color: var(--accent-pink, #f43f5e); margin-bottom: 12px;"></i>
+                <h3>Unable to Load Watchlist</h3>
+                <p>There was a problem communicating with the database.</p>
+                <button class="cyber-btn cyber-btn-primary" style="margin-top: 16px;" onclick="retryWatchlistLoad()">
+                    <i class="fa-solid fa-rotate-right"></i> Retry Loading
+                </button>
+            </div>
+        `;
+        return;
+    }
+
     if (list.length === 0) {
         const emptyAction = state.currentUser
             ? `<button class="cyber-btn cyber-btn-primary" style="margin-top: 16px;" onclick="switchView('discover-view')"><i class="fa-solid fa-compass"></i> Discover Movies</button>`
@@ -47,6 +61,7 @@ function renderWatchlist() {
         `;
         return;
     }
+
 
     list.forEach(movie => {
         const card = createWatchlistMovieCard(movie);
