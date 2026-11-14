@@ -25,6 +25,7 @@ async function initApp() {
                 state.watchlistLoadingStatus = 'loaded';
                 state.watchlist = StorageService.getLegacyWatchlist();
                 updateUserHeaderUI();
+                updateNavWatchlistCount();
                 renderWatchlist();
                 renderDiscoverGrid();
                 renderStats();

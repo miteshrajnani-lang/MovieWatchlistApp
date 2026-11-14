@@ -34,7 +34,17 @@ const ApiService = {
 
         if (runtimeCache.has(movieId)) {
             const cached = runtimeCache.get(movieId);
-            return typeof cached === 'object' ? cached : { id: movieId, runtime: cached };
+            // Only return immediately if the cached entry is a complete details object
+            // (not just a legacy number or an object missing key metadata).
+            if (
+                cached &&
+                typeof cached === 'object' &&
+                typeof cached.runtime === 'number' &&
+                cached.tagline !== undefined &&
+                cached.original_language !== undefined
+            ) {
+                return cached;
+            }
         }
 
         const baseUrl = (window.CONFIG && window.CONFIG.TMDB_BASE_URL) || 'https://api.themoviedb.org/3';

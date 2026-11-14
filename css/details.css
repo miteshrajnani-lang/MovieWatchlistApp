@@ -309,10 +309,8 @@
         grid-template-columns: 1fr;
     }
 
-    .movie-detail-poster-wrapper {
-        margin-top: 0;
-        max-width: 160px;
-        margin-bottom: 20px;
+    .movie-detail-right {
+        display: none;
     }
 
     .movie-detail-title {

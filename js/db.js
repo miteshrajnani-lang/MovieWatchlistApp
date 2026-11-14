@@ -194,6 +194,80 @@ const WatchlistDatabaseService = {
     },
 
     /**
+     * 2a. Insert a new watchlist item using insert-only semantics.
+     *
+     * Returns { saved: MovieObject, wasExisting: boolean }.
+     *
+     * - wasExisting: false  Genuine new insert; `saved` is the stored row.
+     * - wasExisting: true   A row for this (user_id, tmdb_id) already existed.
+     *                       `saved` is the EXISTING row, with all previously saved
+     *                       user data intact (notes, rating, status, metadata).
+     *                       The submitted movie data is never applied on a conflict.
+     *
+     * On a unique violation for a different constraint the error is re-thrown
+     * unchanged so callers receive the actual error rather than a false duplicate.
+     */
+    async insertWatchlistItem(userId, movie) {
+        if (!userId) {
+            throw new Error('insertWatchlistItem: userId is required');
+        }
+        if (!movie || typeof movie !== 'object') {
+            throw new Error('insertWatchlistItem: valid movie object is required');
+        }
+        if (!this.isValidTmdbId(movie.id)) {
+            throw new Error(`insertWatchlistItem: Invalid TMDB ID "${movie.id}". Must be a positive integer.`);
+        }
+        if (!window.supabaseClient) {
+            throw new Error('insertWatchlistItem: Supabase client is not initialized');
+        }
+
+        const rowPayload = this.mapMovieToRow(userId, movie);
+
+        const { data, error } = await window.supabaseClient
+            .from('watchlist_items')
+            .insert(rowPayload)
+            .select()
+            .single();
+
+        if (!error) {
+            return { saved: this.mapRowToMovie(data), wasExisting: false };
+        }
+
+        // PostgreSQL unique_violation (23505). Verify the conflict is specifically for
+        // the user-movie unique constraint ("watchlist_items_user_movie_unique").
+        // Supabase/PostgREST error messages provide the constraint name, while error.details may be null.
+        const isMovieDuplicate =
+            error.code === '23505' &&
+            ((typeof error.message === 'string' && error.message.includes('watchlist_items_user_movie_unique')) ||
+             (typeof error.details === 'string' && /Key\s+\(user_id,\s*tmdb_id\)=\([^)]+\)\s+already exists/i.test(error.details)));
+
+        if (!isMovieDuplicate) {
+            // A different unique constraint was violated — do not misidentify this
+            // as a duplicate movie. Re-throw so the caller receives the real error.
+            console.error('insertWatchlistItem: unexpected unique violation:', error);
+            throw error;
+        }
+
+        // The (user_id, tmdb_id) pair already exists. Fetch the existing row so
+        // the caller can synchronize local state without overwriting any user data.
+        const { data: existing, error: fetchErr } = await window.supabaseClient
+            .from('watchlist_items')
+            .select('*')
+            .eq('user_id', userId)
+            .eq('tmdb_id', movie.id)
+            .single();
+
+        if (fetchErr || !existing) {
+            console.error('insertWatchlistItem: conflict detected but could not fetch existing row:', fetchErr);
+            throw fetchErr || new Error(
+                `insertWatchlistItem: conflict row for tmdb_id ${movie.id} not found after unique violation`
+            );
+        }
+
+        return { saved: this.mapRowToMovie(existing), wasExisting: true };
+    },
+
+    /**
      * 3. Update specific fields of an existing watchlist item (e.g. metadata enrichment)
      */
     async updateWatchlistItem(userId, tmdbId, updates) {

@@ -61,12 +61,10 @@ function renderModalExtraMeta(movie) {
 }
 
 async function openMovieDetailsModal(movieId) {
-    let movie = state.discoverMovies.find(m => m.id === movieId) ||
-        state.watchlist.find(m => m.id === movieId);
+    const watchlistEntry = state.watchlist.find(m => m.id === movieId);
+    let movie = watchlistEntry || state.discoverMovies.find(m => m.id === movieId);
 
     if (!movie) return;
-
-    const watchlistEntry = state.watchlist.find(m => m.id === movieId);
 
     document.getElementById('detailTitle').textContent = movie.title;
     document.getElementById('detailMatch').textContent = `★ ${movie.vote_average} TMDB`;
@@ -150,9 +148,26 @@ async function openMovieDetailsModal(movieId) {
     ModalManager.open('movieDetailsModal');
 
     // On-demand fetch of detailed movie metadata (runtime, tagline, language, etc.) if needed
-    if (state.apiKey && (movie.runtime === undefined || movie.runtime === null || !movie.original_language)) {
+    const needsEnrichment =
+        movie.runtime === undefined ||
+        movie.runtime === null ||
+        !movie.original_language ||
+        movie.original_language.trim() === '' ||
+        !movie.tagline ||
+        movie.tagline.trim() === '';
+
+    if (state.apiKey && needsEnrichment) {
+        const capturedUserId = state.supabaseUserId;
+        const capturedEpoch = state.sessionEpoch;
+
         try {
             const details = await ApiService.fetchMovieDetails(state.apiKey, movie.id);
+
+            // Session guard: verify session is still active
+            if (state.sessionEpoch !== capturedEpoch || state.supabaseUserId !== capturedUserId) {
+                return;
+            }
+
             movie.runtime = details.runtime;
             if (details.tagline) movie.tagline = details.tagline;
             if (details.original_language && !movie.original_language) movie.original_language = details.original_language;
@@ -175,13 +190,40 @@ async function openMovieDetailsModal(movieId) {
                 updateMovieCardRuntime(movie.id, movie.runtime);
             }
 
-            // If movie is saved in watchlist, store runtime to avoid re-fetching
+            // If movie is saved in watchlist, store runtime and metadata to avoid re-fetching
             if (watchlistEntry) {
-                watchlistEntry.runtime = movie.runtime;
-                if (movie.tagline && !watchlistEntry.tagline) watchlistEntry.tagline = movie.tagline;
-                if (movie.original_language && !watchlistEntry.original_language) watchlistEntry.original_language = movie.original_language;
-                saveWatchlist();
-                renderStats();
+                const updates = {};
+
+                if (typeof movie.runtime === 'number' && movie.runtime > 0 && watchlistEntry.runtime !== movie.runtime) {
+                    watchlistEntry.runtime = movie.runtime;
+                    updates.runtime = movie.runtime;
+                }
+
+                if (movie.tagline && (!watchlistEntry.tagline || watchlistEntry.tagline.trim() === '')) {
+                    watchlistEntry.tagline = movie.tagline;
+                    updates.tagline = movie.tagline;
+                }
+
+                if (movie.original_language && (!watchlistEntry.original_language || watchlistEntry.original_language.trim() === '')) {
+                    watchlistEntry.original_language = movie.original_language;
+                    updates.original_language = movie.original_language;
+                }
+
+                if (capturedUserId && window.DB && typeof window.DB.updateWatchlistItem === 'function') {
+                    // Authenticated: persist only if fields genuinely changed, without calling saveWatchlist()
+                    if (Object.keys(updates).length > 0) {
+                        try {
+                            await window.DB.updateWatchlistItem(capturedUserId, movie.id, updates);
+                        } catch (dbErr) {
+                            console.warn(`[Details Modal] Failed to update metadata in database for movie ${movie.id}:`, dbErr);
+                        }
+                    }
+                    renderStats();
+                } else if (!capturedUserId) {
+                    // Anonymous: preserve existing localStorage persistence
+                    saveWatchlist();
+                    renderStats();
+                }
             }
         } catch (err) {
             console.warn('Could not fetch additional movie details for ID:', movie.id, err);

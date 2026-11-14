@@ -315,29 +315,64 @@ async function enrichWatchlistRuntimes() {
     const pending = state.watchlist.filter(m => m.id && (m.runtime === undefined || m.runtime === null));
     if (pending.length === 0) return;
 
+    const capturedUserId = state.supabaseUserId;
+    const capturedEpoch = state.sessionEpoch;
+
     let hasUpdates = false;
     const batchSize = 3;
 
     for (let i = 0; i < pending.length; i += batchSize) {
+        // Session guard: if session changed during processing, stop immediately
+        if (state.sessionEpoch !== capturedEpoch || state.supabaseUserId !== capturedUserId) {
+            console.warn('enrichWatchlistRuntimes: session changed during enrichment; aborting.');
+            return;
+        }
+
         const batch = pending.slice(i, i + batchSize);
         await Promise.all(batch.map(async (movie) => {
             try {
-                let runtime = 0;
+                let fetchedRuntime = 0;
+                let fetchedTagline = null;
+
                 if (window.runtimeCache && window.runtimeCache.has(movie.id)) {
                     const cached = window.runtimeCache.get(movie.id);
-                    runtime = typeof cached === 'object' ? cached.runtime : cached;
+                    fetchedRuntime = typeof cached === 'object' ? cached.runtime : cached;
                 } else if (window.ApiService) {
                     const details = await window.ApiService.fetchMovieDetails(state.apiKey, movie.id);
-                    runtime = details.runtime || 0;
-                    if (details.tagline && !movie.tagline) movie.tagline = details.tagline;
+                    fetchedRuntime = details.runtime || 0;
+                    if (details.tagline) fetchedTagline = details.tagline;
                 }
 
-                if (typeof runtime === 'number') {
-                    // Safe property assignment: preserves all existing fields intact!
-                    movie.runtime = runtime;
-                    hasUpdates = true;
+                // Check session again before applying and persisting
+                if (state.sessionEpoch !== capturedEpoch || state.supabaseUserId !== capturedUserId) {
+                    return;
+                }
+
+                const updates = {};
+
+                if (typeof fetchedRuntime === 'number' && fetchedRuntime > 0 && movie.runtime !== fetchedRuntime) {
+                    movie.runtime = fetchedRuntime;
+                    updates.runtime = fetchedRuntime;
                     if (typeof updateMovieCardRuntime === 'function') {
                         updateMovieCardRuntime(movie.id, movie.runtime);
+                    }
+                }
+
+                if (fetchedTagline && (!movie.tagline || movie.tagline.trim() === '')) {
+                    movie.tagline = fetchedTagline;
+                    updates.tagline = fetchedTagline;
+                }
+
+                if (Object.keys(updates).length > 0) {
+                    hasUpdates = true;
+
+                    // Authenticated: persist partial updates directly to Supabase
+                    if (capturedUserId && window.DB && typeof window.DB.updateWatchlistItem === 'function') {
+                        try {
+                            await window.DB.updateWatchlistItem(capturedUserId, movie.id, updates);
+                        } catch (dbErr) {
+                            console.warn(`[Watchlist Enrichment] Failed to persist updates to database for movie ${movie.id}:`, dbErr);
+                        }
                     }
                 }
             } catch (err) {
@@ -348,8 +383,16 @@ async function enrichWatchlistRuntimes() {
         await new Promise(resolve => setTimeout(resolve, 60));
     }
 
+    // Verify session before final UI updates / anonymous persistence
+    if (state.sessionEpoch !== capturedEpoch || state.supabaseUserId !== capturedUserId) {
+        return;
+    }
+
     if (hasUpdates) {
-        saveWatchlist();
+        if (!capturedUserId) {
+            // Anonymous users: preserve existing localStorage persistence
+            saveWatchlist();
+        }
         if (typeof renderStats === 'function') renderStats();
         if (typeof renderWatchlist === 'function') renderWatchlist();
     }

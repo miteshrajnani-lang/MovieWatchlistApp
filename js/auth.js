@@ -375,6 +375,7 @@ async function handleLogout() {
     state.watchlist = StorageService.getLegacyWatchlist();
 
     updateUserHeaderUI();
+    updateNavWatchlistCount();
     renderWatchlist();
     renderDiscoverGrid();
     renderStats();
