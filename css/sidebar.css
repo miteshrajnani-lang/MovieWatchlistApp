@@ -1,8 +1,12 @@
-/* Discover 2-Column Layout & Filter Sidebar */
+/* ==========================================================================
+   DISCOVER 2-COLUMN LAYOUT & FILTER SIDEBAR
+   Clean Architecture & Spacing
+   ========================================================================== */
+
 .discover-layout {
     display: grid;
-    grid-template-columns: 260px 1fr;
-    gap: 28px;
+    grid-template-columns: 240px 1fr;
+    gap: 24px;
     align-items: start;
 }
 
@@ -11,19 +15,19 @@
 }
 
 .filter-sidebar {
-    background: var(--bg-card);
+    background: rgba(13, 16, 25, 0.85);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
-    padding: 20px;
+    padding: 18px;
     position: sticky;
     top: 24px;
     backdrop-filter: blur(14px);
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.45);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
     transition: var(--transition-normal);
 }
 
 .filter-sidebar:hover {
-    border-color: rgba(0, 240, 255, 0.35);
+    border-color: rgba(255, 255, 255, 0.12);
 }
 
 .sidebar-header {
@@ -37,34 +41,35 @@
 
 .sidebar-title {
     font-family: var(--font-heading);
-    font-size: 0.95rem;
+    font-size: 0.82rem;
     font-weight: 700;
     color: var(--primary-cyan);
     display: flex;
     align-items: center;
     gap: 8px;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
 }
 
 .sidebar-reset-btn {
-    background: rgba(255, 0, 127, 0.12);
-    border: 1px solid var(--glitch-pink);
-    color: var(--glitch-pink);
+    background: rgba(255, 0, 127, 0.08);
+    border: 1px solid rgba(255, 0, 127, 0.3);
+    color: #fda4af;
     border-radius: var(--radius-sm);
     padding: 3px 8px;
-    font-size: 0.72rem;
+    font-size: 0.68rem;
     font-family: var(--font-heading);
     cursor: pointer;
     display: flex;
     align-items: center;
     gap: 4px;
-    transition: all var(--transition-fast);
+    transition: var(--transition-fast);
 }
 
 .sidebar-reset-btn:hover {
     background: var(--glitch-pink);
     color: #ffffff;
-    box-shadow: 0 0 10px var(--glitch-pink-glow);
+    box-shadow: 0 2px 8px rgba(255, 0, 127, 0.3);
 }
 
 .sidebar-section {
@@ -77,31 +82,32 @@
 
 .sidebar-section-title {
     font-family: var(--font-heading);
-    font-size: 0.72rem;
-    color: var(--text-muted);
+    font-size: 0.68rem;
+    color: #64748b;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.8px;
     margin-bottom: 8px;
     display: flex;
     align-items: center;
     gap: 6px;
+    font-weight: 700;
 }
 
 .sidebar-tag-grid {
     display: flex;
     flex-wrap: wrap;
-    gap: 6px;
+    gap: 5px;
 }
 
 .sidebar-tag-grid .filter-badge {
-    font-size: 0.75rem;
-    padding: 4px 9px;
+    font-size: 0.72rem;
+    padding: 4px 8px;
 }
 
 .sidebar-tag-list {
     display: flex;
     flex-direction: column;
-    gap: 5px;
+    gap: 4px;
 }
 
 .sidebar-sort-btn {
@@ -110,19 +116,19 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    font-size: 0.78rem;
-    padding: 7px 12px;
+    font-size: 0.74rem;
+    padding: 6px 10px;
     border-radius: var(--radius-sm);
 }
 
 .results-count-badge {
-    font-family: var(--font-heading);
+    font-family: var(--font-body);
     font-size: 0.75rem;
-    color: var(--text-muted);
-    background: rgba(255, 255, 255, 0.05);
+    font-weight: 600;
+    color: #94a3b8;
+    background: rgba(255, 255, 255, 0.04);
     border: 1px solid var(--border-color);
     padding: 3px 10px;
-    border-radius: 20px;
+    border-radius: 4px;
     margin-left: auto;
 }
-

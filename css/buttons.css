@@ -1,17 +1,19 @@
 /* ==========================================================================
    BUTTONS & ACTION CONTROLS MODULE
+   Cinematic Refinements & Smooth Motion
    ========================================================================== */
 
-/* Cyber Base Button */
+/* Base Action Button */
 .cyber-btn {
     font-family: var(--font-heading);
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.8px;
-    padding: 14px 24px;
-    border-radius: var(--radius-md);
-    border: none;
+    letter-spacing: 0.6px;
+    padding: 0 20px;
+    height: 46px; /* Pixel-perfect height parity with inputs */
+    border-radius: var(--radius-sm);
+    border: 1px solid transparent;
     cursor: pointer;
     transition: var(--transition-fast);
     display: inline-flex;
@@ -19,85 +21,98 @@
     justify-content: center;
     gap: 8px;
     position: relative;
-    overflow: hidden;
+    user-select: none;
+    white-space: nowrap;
+    text-decoration: none;
 }
 
-/* Primary Button (Cyan) */
+.cyber-btn:active {
+    transform: translateY(1px);
+}
+
+/* Primary Button (Cyan Accent) */
 .cyber-btn-primary {
-    background: linear-gradient(135deg, var(--primary-cyan), #00b4d8);
-    color: #08090d;
-    box-shadow: 0 0 15px var(--primary-cyan-glow);
+    background: var(--primary-cyan);
+    color: #05070a;
+    border-color: rgba(0, 240, 255, 0.4);
+    box-shadow: 0 2px 10px rgba(0, 240, 255, 0.2);
 }
 
 .cyber-btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 0 25px var(--primary-cyan-glow);
-    filter: brightness(1.1);
+    background: #33f3ff;
+    border-color: #66f6ff;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(0, 240, 255, 0.35);
 }
 
-/* Secondary Button (Purple) */
+/* Secondary Button (Purple Accent) */
 .cyber-btn-secondary {
-    background: rgba(168, 85, 247, 0.15);
-    color: var(--secondary-purple);
-    border: 1px solid var(--secondary-purple);
+    background: rgba(168, 85, 247, 0.1);
+    color: #d8b4fe;
+    border: 1px solid rgba(168, 85, 247, 0.3);
 }
 
 .cyber-btn-secondary:hover {
-    background: var(--secondary-purple);
-    color: #08090d;
-    box-shadow: 0 0 18px var(--secondary-purple-glow);
+    background: rgba(168, 85, 247, 0.22);
+    border-color: rgba(168, 85, 247, 0.55);
+    color: #ffffff;
+    box-shadow: 0 4px 14px rgba(168, 85, 247, 0.2);
 }
 
 .cyber-btn-secondary.active {
-    background: var(--secondary-purple);
-    color: #08090d;
-    box-shadow: 0 0 18px var(--secondary-purple-glow);
+    background: rgba(168, 85, 247, 0.25);
+    border-color: var(--secondary-purple);
+    color: #ffffff;
 }
 
-/* Danger / Accent Button (Pink) */
+/* Danger / Accent Button (Pink Accent) */
 .cyber-btn-pink {
-    background: rgba(255, 0, 127, 0.15);
-    color: var(--glitch-pink);
-    border: 1px solid var(--glitch-pink);
+    background: rgba(255, 0, 127, 0.1);
+    color: #fda4af;
+    border: 1px solid rgba(255, 0, 127, 0.3);
 }
 
 .cyber-btn-pink:hover {
     background: var(--glitch-pink);
+    border-color: var(--glitch-pink);
     color: #ffffff;
-    box-shadow: 0 0 18px var(--glitch-pink-glow);
+    box-shadow: 0 4px 14px rgba(255, 0, 127, 0.35);
 }
 
 .cyber-btn-block {
     width: 100%;
 }
 
-/* Card Action Icon Buttons */
+/* Card Action Buttons */
 .btn-icon {
     flex: 1;
-    padding: 8px;
-    background: rgba(255, 255, 255, 0.05);
+    height: 34px;
+    padding: 0 10px;
+    background: rgba(255, 255, 255, 0.04);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-sm);
-    color: var(--text-main);
-    font-size: 0.8rem;
+    color: #cbd5e1;
+    font-size: 0.76rem;
+    font-family: var(--font-body);
+    font-weight: 500;
     cursor: pointer;
     transition: var(--transition-fast);
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 6px;
 }
 
 .btn-icon:hover {
-    border-color: var(--primary-cyan);
+    border-color: rgba(0, 240, 255, 0.4);
     color: var(--primary-cyan);
-    background: rgba(0, 240, 255, 0.1);
+    background: rgba(0, 240, 255, 0.08);
 }
 
 .btn-icon.delete:hover {
-    border-color: var(--glitch-pink);
-    color: var(--glitch-pink);
-    background: rgba(255, 0, 127, 0.1);
+    border-color: rgba(255, 0, 127, 0.45);
+    color: #ff4d94;
+    background: rgba(255, 0, 127, 0.08);
 }
 
 /* Modal Close Buttons */
@@ -105,23 +120,30 @@
     background: transparent;
     border: none;
     color: var(--text-muted);
-    font-size: 1.4rem;
+    font-size: 1.35rem;
     cursor: pointer;
     transition: var(--transition-fast);
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
 }
 
 .modal-close:hover {
-    color: var(--glitch-pink);
+    color: #fff;
+    background: rgba(255, 255, 255, 0.08);
 }
 
 .movie-detail-close-btn {
     position: absolute;
     top: 14px;
     right: 16px;
-    background: rgba(0, 0, 0, 0.6);
+    background: rgba(8, 10, 16, 0.7);
     border: 1px solid rgba(255, 255, 255, 0.15);
     color: #fff;
-    font-size: 1.4rem;
+    font-size: 1.25rem;
     width: 36px;
     height: 36px;
     border-radius: 50%;
@@ -130,11 +152,13 @@
     align-items: center;
     justify-content: center;
     z-index: 10;
-    transition: background 0.2s ease;
+    transition: var(--transition-fast);
     line-height: 1;
+    backdrop-filter: blur(8px);
 }
 
 .movie-detail-close-btn:hover {
-    background: var(--glitch-pink);
+    background: rgba(255, 0, 127, 0.85);
     border-color: var(--glitch-pink);
+    transform: scale(1.05);
 }

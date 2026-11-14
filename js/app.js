@@ -16,6 +16,10 @@ function initApp() {
     loadInitialDiscoverMovies();
     renderWatchlist();
     renderStats();
+
+    if (typeof enrichWatchlistRuntimes === 'function') {
+        enrichWatchlistRuntimes();
+    }
 }
 
 // Unified Namespace for clean modular access

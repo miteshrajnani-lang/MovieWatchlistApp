@@ -131,32 +131,69 @@
 
             <!-- View: Statistics & Analytics -->
             <section id="stats-view" class="view-section" style="display: none;">
-                <div class="section-toolbar">
-                    <h2 class="section-title">WATCHLIST ANALYTICS & STATS</h2>
+                <div class="stats-journal-header">
+                    <h2 class="stats-journal-title">
+                        <i class="fa-solid fa-chart-pie"></i> Watchlist Statistics
+                    </h2>
+                    <p class="stats-journal-subtitle">Overview of your viewing habits, watch time, and genre preferences</p>
                 </div>
 
-                <div class="stats-grid">
-                    <div class="stat-card">
+                <div class="stats-journal-ledger stats-grid">
+                    <div class="stat-journal-item stat-card">
+                        <span class="stat-tag">Collection</span>
                         <div class="stat-number" id="statTotalMovies">0</div>
                         <div class="stat-label">Total Saved Movies</div>
                     </div>
-                    <div class="stat-card">
+                    <div class="stat-journal-item stat-card">
+                        <span class="stat-tag">Screened</span>
                         <div class="stat-number stat-number-completed" id="statCompletedMovies">0</div>
                         <div class="stat-label">Movies Completed</div>
                     </div>
-                    <div class="stat-card">
+                    <div class="stat-journal-item stat-card">
+                        <span class="stat-tag">Avg Rating</span>
                         <div class="stat-number stat-number-rating" id="statAvgRating">0.0 ★</div>
-                        <div class="stat-label">Avg Personal Rating</div>
+                        <div class="stat-label">Personal Average</div>
                     </div>
-                    <div class="stat-card">
+                    <div class="stat-journal-item stat-card">
+                        <span class="stat-tag">Watch Time</span>
                         <div class="stat-number stat-number-hours" id="statHoursEstimated">0 hrs</div>
-                        <div class="stat-label">Est. Watch Time</div>
+                        <div class="stat-label" id="statHoursLabel">Completed Watch Time</div>
+                        <div class="stat-meta-note" id="statTotalWatchTime">Library: 0 hrs</div>
+                        <div class="stat-partial-indicator" id="statWatchTimePartialNotice" style="display: none;"></div>
                     </div>
                 </div>
 
-                <div class="stat-breakdown-card">
-                    <h3 class="stat-breakdown-title"><i class="fa-solid fa-chart-bar"></i> Watch Status Breakdown</h3>
-                    <div id="statusBreakdownContainer" class="status-breakdown-container"></div>
+                <div class="stats-panels-grid">
+                    <div class="stat-journal-panel stat-breakdown-card">
+                        <div class="stat-panel-header">
+                            <h3 class="stat-breakdown-title stat-panel-title">
+                                <i class="fa-solid fa-bars-progress"></i> Watch Status
+                            </h3>
+                            <span class="stat-panel-subtitle">Distribution</span>
+                        </div>
+                        <div id="statusBreakdownContainer" class="status-breakdown-container"></div>
+                    </div>
+
+                    <div class="stat-journal-panel" id="genreDistributionPanel">
+                        <div class="stat-panel-header">
+                            <h3 class="stat-panel-title">
+                                <i class="fa-solid fa-film"></i> Top Genres
+                            </h3>
+                            <span class="stat-panel-subtitle">By Count</span>
+                        </div>
+                        <div id="genreDistributionContainer"></div>
+                    </div>
+                </div>
+
+                <!-- Highest-Rated Movies Section -->
+                <div class="stat-journal-panel stat-showcase-panel" id="highestRatedPanel">
+                    <div class="stat-panel-header">
+                        <h3 class="stat-panel-title">
+                            <i class="fa-solid fa-star" style="color: var(--star-gold);"></i> Highest Rated Movies
+                        </h3>
+                        <span class="stat-panel-subtitle">Top 5 by Personal Rating</span>
+                    </div>
+                    <div id="highestRatedContainer" class="highest-rated-grid"></div>
                 </div>
             </section>
 
@@ -223,11 +260,13 @@
                 <button class="movie-detail-close-btn" onclick="closeMovieDetailsModal()">&times;</button>
                 <div class="movie-detail-hero-content">
                     <h1 class="movie-detail-title" id="detailTitle">Movie Title</h1>
+                    <p class="movie-detail-tagline" id="detailTagline" style="display: none;"></p>
                     <div class="movie-detail-meta">
                         <span class="net-match" id="detailMatch">★ 8.5 TMDB</span>
                         <span class="net-year" id="detailYear">2024</span>
+                        <span class="net-runtime" id="detailRuntime"><i class="fa-regular fa-clock"></i> --</span>
+                        <span class="net-lang" id="detailLanguage" style="display: none;"></span>
                         <span class="net-badge">HD</span>
-                        <span class="net-badge">ULTRA 4K</span>
                     </div>
                 </div>
             </div>
@@ -236,6 +275,7 @@
                 <div class="movie-detail-main-grid">
                     <div class="movie-detail-left">
                         <div class="genre-tags detail-genres" id="detailGenres"></div>
+                        <div class="detail-extra-meta" id="detailExtraMeta"></div>
                         <p class="movie-detail-overview" id="detailOverview">Loading synopsis...</p>
                         <div id="detailWatchlistStatusBox" class="detail-status-box"></div>
                         <div class="movie-detail-actions" id="detailActions"></div>
