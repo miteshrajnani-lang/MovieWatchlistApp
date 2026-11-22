@@ -65,6 +65,28 @@
     color: #ffffff;
 }
 
+/* Cyan Outline Button */
+.cyber-btn-cyan {
+    background: rgba(0, 240, 255, 0.08);
+    color: var(--primary-cyan);
+    border: 1px solid var(--border-hover);
+}
+
+.cyber-btn-cyan:hover {
+    background: var(--primary-cyan-glow);
+    border-color: var(--primary-cyan);
+    color: #ffffff;
+    box-shadow: 0 4px 14px var(--primary-cyan-glow);
+    transform: translateY(-1px);
+}
+
+.cyber-btn-cyan:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
 /* Danger / Accent Button (Pink Accent) */
 .cyber-btn-pink {
     background: rgba(255, 0, 127, 0.1);

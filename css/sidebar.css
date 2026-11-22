@@ -30,6 +30,31 @@
     border-color: rgba(255, 255, 255, 0.12);
 }
 
+/* Mobile Collapsible Components (Hidden on Desktop) */
+.mobile-filter-bar,
+.mobile-filter-toggle {
+    display: none;
+}
+
+@media (min-width: 961px) {
+    .mobile-filter-bar,
+    .mobile-filter-toggle {
+        display: none !important;
+    }
+    .desktop-only-header {
+        display: flex !important;
+    }
+    .filter-collapsible-wrapper {
+        display: block !important;
+        grid-template-rows: none !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+    }
+    .filter-collapsible-inner {
+        overflow: visible !important;
+    }
+}
+
 .sidebar-header {
     display: flex;
     justify-content: space-between;

@@ -7,38 +7,9 @@ function renderDiscoverGrid() {
     if (!grid) return;
     grid.innerHTML = '';
 
-    let moviesToDisplay = [...state.discoverMovies];
-
-    if (state.activeGenre !== 'ALL') {
-        moviesToDisplay = moviesToDisplay.filter(m => m.genres && m.genres.includes(state.activeGenre));
-    }
-
-    if (state.minRating > 0) {
-        moviesToDisplay = moviesToDisplay.filter(m => m.vote_average >= state.minRating);
-    }
-
-    if (state.releaseDecade !== 'ALL') {
-        moviesToDisplay = moviesToDisplay.filter(m => {
-            const year = parseInt((m.release_date || '').split('-')[0]);
-            if (!year) return false;
-            if (state.releaseDecade === '2020s') return year >= 2020;
-            if (state.releaseDecade === '2010s') return year >= 2010 && year < 2020;
-            if (state.releaseDecade === '2000s') return year >= 2000 && year < 2010;
-            if (state.releaseDecade === '1990s') return year >= 1990 && year < 2000;
-            if (state.releaseDecade === 'Older') return year < 1990;
-            return true;
-        });
-    }
-
-    if (state.discoverSort === 'rating') {
-        moviesToDisplay.sort((a, b) => b.vote_average - a.vote_average);
-    } else if (state.discoverSort === 'newest') {
-        moviesToDisplay.sort((a, b) => new Date(b.release_date || 0) - new Date(a.release_date || 0));
-    } else if (state.discoverSort === 'oldest') {
-        moviesToDisplay.sort((a, b) => new Date(a.release_date || 0) - new Date(b.release_date || 0));
-    } else if (state.discoverSort === 'title') {
-        moviesToDisplay.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
-    }
+    // state.discoverMovies is already filtered and sorted by loadDiscoverMovies() / ApiService.
+    // No in-memory re-filtering needed here.
+    const moviesToDisplay = state.discoverMovies || [];
 
     const countBadge = document.getElementById('discoverResultsCount');
     if (countBadge) {
@@ -66,25 +37,25 @@ function renderDiscoverGrid() {
 function setGenreFilter(genre) {
     state.activeGenre = genre;
     renderAdvancedFilters();
-    renderDiscoverGrid();
+    loadDiscoverMovies();
 }
 
 function setMinRating(rating) {
     state.minRating = rating;
     renderAdvancedFilters();
-    renderDiscoverGrid();
+    loadDiscoverMovies();
 }
 
 function setReleaseDecade(decade) {
     state.releaseDecade = decade;
     renderAdvancedFilters();
-    renderDiscoverGrid();
+    loadDiscoverMovies();
 }
 
 function setDiscoverSort(sort) {
     state.discoverSort = sort;
     renderAdvancedFilters();
-    renderDiscoverGrid();
+    loadDiscoverMovies();
 }
 
 function resetDiscoverFilters() {
@@ -92,8 +63,29 @@ function resetDiscoverFilters() {
     state.minRating = 0;
     state.releaseDecade = 'ALL';
     state.discoverSort = 'default';
-    renderAdvancedFilters();
-    renderDiscoverGrid();
+    loadInitialDiscoverMovies();
+}
+
+function toggleDiscoverFilters() {
+    state.filtersExpanded = !state.filtersExpanded;
+    const wrapper = document.getElementById('filterCollapsibleWrapper');
+    const toggleBtn = document.getElementById('mobileFilterToggle');
+    const chevron = document.getElementById('filterToggleChevron');
+
+    if (wrapper && toggleBtn && chevron) {
+        toggleBtn.setAttribute('aria-expanded', state.filtersExpanded ? 'true' : 'false');
+        if (state.filtersExpanded) {
+            wrapper.classList.add('expanded');
+            wrapper.setAttribute('aria-hidden', 'false');
+            chevron.classList.add('rotated');
+        } else {
+            wrapper.classList.remove('expanded');
+            wrapper.setAttribute('aria-hidden', 'true');
+            chevron.classList.remove('rotated');
+        }
+    } else {
+        renderAdvancedFilters();
+    }
 }
 
 function renderAdvancedFilters() {
@@ -120,47 +112,70 @@ function renderAdvancedFilters() {
         ]
     };
 
-    const hasActiveFilter = state.activeGenre !== 'ALL' || state.minRating > 0 || state.releaseDecade !== 'ALL' || state.discoverSort !== 'default';
+    let activeCount = 0;
+    if (state.activeGenre !== 'ALL') activeCount++;
+    if (state.minRating > 0) activeCount++;
+    if (state.releaseDecade !== 'ALL') activeCount++;
+    if (state.discoverSort !== 'default') activeCount++;
+
+    const hasActiveFilter = activeCount > 0;
+    const isExpanded = !!state.filtersExpanded;
 
     sidebar.innerHTML = `
-        <div class="sidebar-header">
-            <div class="sidebar-title"><i class="fa-solid fa-sliders"></i> Filters</div>
-            ${hasActiveFilter ? `<button class="sidebar-reset-btn" onclick="resetDiscoverFilters()"><i class="fa-solid fa-rotate-left"></i> Reset</button>` : ''}
+        <div class="mobile-filter-bar">
+            <button type="button" class="mobile-filter-toggle" id="mobileFilterToggle" aria-expanded="${isExpanded ? 'true' : 'false'}" aria-controls="filterCollapsibleWrapper" onclick="toggleDiscoverFilters()">
+                <span class="filter-toggle-content">
+                    <i class="fa-solid fa-sliders"></i>
+                    <span class="filter-toggle-label">FILTERS</span>
+                    ${hasActiveFilter ? `<span class="filter-active-pill" title="${activeCount} active filter${activeCount > 1 ? 's' : ''}">${activeCount}</span>` : ''}
+                </span>
+                <i class="fa-solid fa-chevron-down filter-toggle-chevron ${isExpanded ? 'rotated' : ''}" id="filterToggleChevron"></i>
+            </button>
+            ${hasActiveFilter ? `<button class="sidebar-reset-btn mobile-reset-btn" onclick="resetDiscoverFilters()" title="Reset all filters"><i class="fa-solid fa-rotate-left"></i> Reset</button>` : ''}
         </div>
 
-        <div class="sidebar-section">
-            <div class="sidebar-section-title"><i class="fa-solid fa-film" style="color:var(--primary-cyan);"></i> Genre</div>
-            <div class="sidebar-tag-grid">
-                ${filterOptions.GENRES.map(g => `
-                    <button class="filter-badge ${state.activeGenre === g ? 'active' : ''}" onclick="setGenreFilter('${g}')">${g === 'ALL' ? 'All Genres' : g}</button>
-                `).join('')}
-            </div>
-        </div>
+        <div class="filter-collapsible-wrapper ${isExpanded ? 'expanded' : ''}" id="filterCollapsibleWrapper" role="region" aria-labelledby="mobileFilterToggle" aria-hidden="${isExpanded ? 'false' : 'true'}">
+            <div class="filter-collapsible-inner">
+                <div class="sidebar-header desktop-only-header">
+                    <div class="sidebar-title"><i class="fa-solid fa-sliders"></i> Filters</div>
+                    ${hasActiveFilter ? `<button class="sidebar-reset-btn" onclick="resetDiscoverFilters()"><i class="fa-solid fa-rotate-left"></i> Reset</button>` : ''}
+                </div>
 
-        <div class="sidebar-section">
-            <div class="sidebar-section-title"><i class="fa-solid fa-star" style="color:var(--star-gold);"></i> Min TMDB Rating</div>
-            <div class="sidebar-tag-grid">
-                ${filterOptions.RATINGS.map(r => `
-                    <button class="filter-badge ${state.minRating === r.val ? 'active' : ''}" onclick="setMinRating(${r.val})">${r.label}</button>
-                `).join('')}
-            </div>
-        </div>
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title"><i class="fa-solid fa-film" style="color:var(--primary-cyan);"></i> Genre</div>
+                    <div class="sidebar-tag-grid">
+                        ${filterOptions.GENRES.map(g => `
+                            <button class="filter-badge ${state.activeGenre === g ? 'active' : ''}" onclick="setGenreFilter('${g}')">${g === 'ALL' ? 'All Genres' : g}</button>
+                        `).join('')}
+                    </div>
+                </div>
 
-        <div class="sidebar-section">
-            <div class="sidebar-section-title"><i class="fa-regular fa-calendar" style="color:var(--secondary-purple);"></i> Release Era</div>
-            <div class="sidebar-tag-grid">
-                ${filterOptions.DECADES.map(d => `
-                    <button class="filter-badge ${state.releaseDecade === d ? 'active' : ''}" onclick="setReleaseDecade('${d}')">${d === 'ALL' ? 'Any Year' : d}</button>
-                `).join('')}
-            </div>
-        </div>
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title"><i class="fa-solid fa-star" style="color:var(--star-gold);"></i> Min TMDB Rating</div>
+                    <div class="sidebar-tag-grid">
+                        ${filterOptions.RATINGS.map(r => `
+                            <button class="filter-badge ${state.minRating === r.val ? 'active' : ''}" onclick="setMinRating(${r.val})">${r.label}</button>
+                        `).join('')}
+                    </div>
+                </div>
 
-        <div class="sidebar-section">
-            <div class="sidebar-section-title"><i class="fa-solid fa-arrow-up-wide-short" style="color:var(--primary-cyan);"></i> Sort Order</div>
-            <div class="sidebar-tag-list">
-                ${filterOptions.SORTS.map(s => `
-                    <button class="filter-badge sidebar-sort-btn ${state.discoverSort === s.value ? 'active' : ''}" onclick="setDiscoverSort('${s.value}')">${s.label}</button>
-                `).join('')}
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title"><i class="fa-regular fa-calendar" style="color:var(--secondary-purple);"></i> Release Era</div>
+                    <div class="sidebar-tag-grid">
+                        ${filterOptions.DECADES.map(d => `
+                            <button class="filter-badge ${state.releaseDecade === d ? 'active' : ''}" onclick="setReleaseDecade('${d}')">${d === 'ALL' ? 'Any Year' : d}</button>
+                        `).join('')}
+                    </div>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title"><i class="fa-solid fa-arrow-up-wide-short" style="color:var(--primary-cyan);"></i> Sort Order</div>
+                    <div class="sidebar-tag-list">
+                        ${filterOptions.SORTS.map(s => `
+                            <button class="filter-badge sidebar-sort-btn ${state.discoverSort === s.value ? 'active' : ''}" onclick="setDiscoverSort('${s.value}')">${s.label}</button>
+                        `).join('')}
+                    </div>
+                </div>
             </div>
         </div>
     `;
@@ -174,3 +189,4 @@ window.setReleaseDecade = setReleaseDecade;
 window.setDiscoverSort = setDiscoverSort;
 window.resetDiscoverFilters = resetDiscoverFilters;
 window.renderAdvancedFilters = renderAdvancedFilters;
+window.toggleDiscoverFilters = toggleDiscoverFilters;

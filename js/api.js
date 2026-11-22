@@ -7,13 +7,13 @@ const runtimeCache = new Map();
 const ApiService = {
     runtimeCache,
 
-    async fetchPopular(apiKey) {
+    async fetchPopular(apiKey, page = 1) {
         const baseUrl = (window.CONFIG && window.CONFIG.TMDB_BASE_URL) || 'https://api.themoviedb.org/3';
-        const url = `${baseUrl}/movie/popular?api_key=${apiKey}&language=en-US&page=1`;
+        const url = `${baseUrl}/movie/popular?api_key=${apiKey}&language=en-US&page=${page}`;
         const response = await fetch(url);
         if (!response.ok) throw new Error('API Request Failed');
         const data = await response.json();
-        return this.formatResults(data.results || []);
+        return { results: this.formatResults(data.results || []), total_pages: data.total_pages || 1 };
     },
 
     async search(apiKey, query) {
@@ -82,6 +82,88 @@ const ApiService = {
         }
     },
 
+    /**
+     * Fetch movies from TMDB /discover/movie with filter parameters.
+     * Maps app-level filter state to TMDB query parameters.
+     */
+    async discover(apiKey, filters = {}, page = 1) {
+        const baseUrl = (window.CONFIG && window.CONFIG.TMDB_BASE_URL) || 'https://api.themoviedb.org/3';
+        const params = new URLSearchParams({
+            api_key: apiKey,
+            language: 'en-US',
+            page: String(page)
+        });
+
+        // --- Genre ---
+        const { genre = 'ALL' } = filters;
+        if (genre !== 'ALL') {
+            // Build reverse map: genre name -> TMDB numeric ID
+            const genresMap = window.TMDB_GENRES || {};
+            const nameToId = {};
+            for (const [id, name] of Object.entries(genresMap)) {
+                nameToId[name] = id;
+            }
+            // Handle app-side alias "Sci-Fi" -> TMDB name "Science Fiction" (id 878)
+            const tmdbAliases = { 'Sci-Fi': '878' };
+            const genreId = tmdbAliases[genre] || nameToId[genre];
+            if (genreId) params.set('with_genres', genreId);
+        }
+
+        // --- Minimum rating ---
+        const minRating = filters.minRating || 0;
+        if (minRating > 0) {
+            params.set('vote_average.gte', minRating);
+            // Require a minimum vote count so obscure 1-vote films don't dominate.
+            // Use a looser threshold for very high ratings (9+) to avoid empty results.
+            params.set('vote_count.gte', minRating >= 9 ? '20' : '50');
+        }
+
+        // --- Release decade / era ---
+        const decade = filters.releaseDecade || 'ALL';
+        if (decade === '2020s') {
+            params.set('primary_release_date.gte', '2020-01-01');
+        } else if (decade === '2010s') {
+            params.set('primary_release_date.gte', '2010-01-01');
+            params.set('primary_release_date.lte', '2019-12-31');
+        } else if (decade === '2000s') {
+            params.set('primary_release_date.gte', '2000-01-01');
+            params.set('primary_release_date.lte', '2009-12-31');
+        } else if (decade === '1990s') {
+            params.set('primary_release_date.gte', '1990-01-01');
+            params.set('primary_release_date.lte', '1999-12-31');
+        } else if (decade === 'Older') {
+            params.set('primary_release_date.lte', '1989-12-31');
+        }
+        // 'ALL' → no date filter
+
+        // --- Sort ---
+        const sort = filters.sort || 'default';
+        if (sort === 'rating') {
+            params.set('sort_by', 'vote_average.desc');
+            // Ensure sort_by=vote_average.desc returns real high-rated films, not obscure ones
+            if (!params.has('vote_count.gte')) params.set('vote_count.gte', '50');
+        } else if (sort === 'newest') {
+            params.set('sort_by', 'primary_release_date.desc');
+        } else if (sort === 'oldest') {
+            params.set('sort_by', 'primary_release_date.asc');
+        } else {
+            // 'default' and 'title' both fetch by popularity; title sort applied in-memory
+            params.set('sort_by', 'popularity.desc');
+        }
+
+        const url = `${baseUrl}/discover/movie?${params.toString()}`;
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`TMDB Discover request failed (${response.status})`);
+        const data = await response.json();
+        let results = this.formatResults(data.results || []);
+
+        if (sort === 'title') {
+            results = results.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
+        }
+
+        return { results, total_pages: data.total_pages || 1 };
+    },
+
     formatResults(results) {
         const w500Base = (window.CONFIG && window.CONFIG.IMAGE_BASE_W500) || 'https://image.tmdb.org/t/p/w500';
         const w1280Base = (window.CONFIG && window.CONFIG.IMAGE_BASE_W1280) || 'https://image.tmdb.org/t/p/w1280';
@@ -142,25 +224,150 @@ async function enrichDiscoverRuntimes() {
 }
 
 async function loadInitialDiscoverMovies() {
+    state.activeGenre = 'ALL';
+    state.minRating = 0;
+    state.releaseDecade = 'ALL';
+    state.discoverSort = 'default';
+    await loadDiscoverMovies();
+}
+
+/**
+ * Central Discover fetch: reads active state filters, calls TMDB /discover/movie,
+ * populates state.discoverMovies, then renders.
+ *
+ * When no filters are set, falls back to /movie/popular (same result, slightly faster).
+ * Called by filter setters and initial load.
+ */
+async function loadDiscoverMovies() {
+    const grid = document.getElementById('discoverGrid');
     const discoverTitle = document.getElementById('discoverResultsTitle');
+    const countBadge = document.getElementById('discoverResultsCount');
+
+    const isAllDefaults =
+        state.activeGenre === 'ALL' &&
+        state.minRating === 0 &&
+        state.releaseDecade === 'ALL' &&
+        state.discoverSort === 'default';
+
+    // Update title
     if (discoverTitle) {
-        discoverTitle.textContent = (window.CONFIG && window.CONFIG.DEFAULT_DISCOVER_TITLE) || 'Popular & Trending Selection';
+        discoverTitle.textContent = isAllDefaults
+            ? (window.CONFIG && window.CONFIG.DEFAULT_DISCOVER_TITLE) || 'Popular & Trending Selection'
+            : 'Discover Results';
     }
 
-    if (state.apiKey) {
-        try {
-            state.discoverMovies = await ApiService.fetchPopular(state.apiKey);
-        } catch (err) {
-            console.warn('TMDB API call failed:', err);
-            showToast('Could not reach TMDB. Check your API key.', 'info');
-            state.discoverMovies = [];
-        }
-    } else {
-        state.discoverMovies = [];
+    // Show loading spinner in grid
+    if (grid) {
+        grid.innerHTML = `
+            <div style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: var(--text-muted);">
+                <i class="fa-solid fa-spinner fa-spin" style="font-size: 2rem; color: var(--primary-cyan); margin-bottom: 12px;"></i>
+                <p>Loading movies...</p>
+            </div>
+        `;
     }
+    if (countBadge) countBadge.textContent = '';
+
+    if (!state.apiKey) {
+        state.discoverMovies = [];
+        renderDiscoverGrid();
+        renderAdvancedFilters();
+        return;
+    }
+
+    try {
+        if (isAllDefaults) {
+            const { results, total_pages } = await ApiService.fetchPopular(state.apiKey, 1);
+            state.discoverMovies = results;
+            state.discoverPage = 1;
+            state.discoverTotalPages = total_pages;
+        } else {
+            const { results, total_pages } = await ApiService.discover(state.apiKey, {
+                genre: state.activeGenre,
+                minRating: state.minRating,
+                releaseDecade: state.releaseDecade,
+                sort: state.discoverSort
+            }, 1);
+            state.discoverMovies = results;
+            state.discoverPage = 1;
+            state.discoverTotalPages = total_pages;
+        }
+    } catch (err) {
+        console.warn('TMDB Discover failed:', err);
+        showToast('Could not reach TMDB. Check your connection or API key.', 'info');
+        state.discoverMovies = [];
+        state.discoverPage = 1;
+        state.discoverTotalPages = 1;
+    }
+
     renderDiscoverGrid();
     renderAdvancedFilters();
+    updateLoadMoreButton();
     enrichDiscoverRuntimes();
+}
+
+async function loadMoreDiscoverMovies() {
+    if (state.discoverPage >= state.discoverTotalPages) return;
+
+    const btn = document.getElementById('discoverLoadMoreBtn');
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Loading...';
+    }
+
+    const nextPage = state.discoverPage + 1;
+    const isAllDefaults =
+        state.activeGenre === 'ALL' &&
+        state.minRating === 0 &&
+        state.releaseDecade === 'ALL' &&
+        state.discoverSort === 'default';
+
+    try {
+        const { results, total_pages } = isAllDefaults
+            ? await ApiService.fetchPopular(state.apiKey, nextPage)
+            : await ApiService.discover(state.apiKey, {
+                genre: state.activeGenre,
+                minRating: state.minRating,
+                releaseDecade: state.releaseDecade,
+                sort: state.discoverSort
+            }, nextPage);
+
+        // Deduplicate by id before appending
+        const existingIds = new Set(state.discoverMovies.map(m => m.id));
+        const newMovies = results.filter(m => !existingIds.has(m.id));
+
+        state.discoverMovies = state.discoverMovies.concat(newMovies);
+        state.discoverPage = nextPage;
+        state.discoverTotalPages = total_pages;
+
+        // Append new cards to existing grid
+        const grid = document.getElementById('discoverGrid');
+        if (grid) {
+            newMovies.forEach(movie => {
+                const isInWatchlist = state.watchlist.some(w => w.id === movie.id);
+                const card = createDiscoverMovieCard(movie, isInWatchlist);
+                grid.appendChild(card);
+            });
+        }
+
+        const countBadge = document.getElementById('discoverResultsCount');
+        if (countBadge) countBadge.textContent = `${state.discoverMovies.length} titles`;
+
+        enrichDiscoverRuntimes();
+    } catch (err) {
+        console.warn('Load More failed:', err);
+        showToast('Failed to load more movies. Try again.', 'info');
+    }
+
+    updateLoadMoreButton();
+}
+
+function updateLoadMoreButton() {
+    const btn = document.getElementById('discoverLoadMoreBtn');
+    if (!btn) return;
+    const hasMore = state.discoverPage < state.discoverTotalPages;
+    btn.style.display = hasMore ? 'flex' : 'none';
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fa-solid fa-chevron-down"></i> Load More';
 }
 
 async function searchMovies(query) {
@@ -169,6 +376,9 @@ async function searchMovies(query) {
         loadInitialDiscoverMovies();
         return;
     }
+
+    state.discoverPage = 1;
+    state.discoverTotalPages = 1;
 
     const discoverTitle = document.getElementById('discoverResultsTitle');
     if (discoverTitle) discoverTitle.textContent = `Search Results for "${trimmed}"`;
@@ -182,9 +392,13 @@ async function searchMovies(query) {
         } catch (err) {
             console.error('TMDB Search Error:', err);
             showToast('Search failed. Check your connection.', 'info');
+            state.discoverMovies = [];
         }
+    } else {
+        state.discoverMovies = [];
     }
     renderDiscoverGrid();
+    updateLoadMoreButton();
     enrichDiscoverRuntimes();
 }
 
@@ -196,6 +410,9 @@ function formatTmdbResults(results) {
 window.runtimeCache = runtimeCache;
 window.ApiService = ApiService;
 window.enrichDiscoverRuntimes = enrichDiscoverRuntimes;
+window.loadDiscoverMovies = loadDiscoverMovies;
 window.loadInitialDiscoverMovies = loadInitialDiscoverMovies;
 window.searchMovies = searchMovies;
 window.formatTmdbResults = formatTmdbResults;
+window.loadMoreDiscoverMovies = loadMoreDiscoverMovies;
+window.updateLoadMoreButton = updateLoadMoreButton;

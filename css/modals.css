@@ -2,6 +2,19 @@
    MODAL DIALOGS & OVERLAYS MODULE
    ========================================================================== */
 
+/* Scroll-Lock State for Background Document */
+html.modal-open {
+    overflow: hidden !important;
+}
+
+body.modal-open {
+    overflow: hidden !important;
+    position: fixed !important;
+    width: 100% !important;
+    left: 0 !important;
+    right: 0 !important;
+}
+
 .modal-overlay {
     position: fixed;
     top: 0;
@@ -19,6 +32,9 @@
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.25s var(--ease-out);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
 }
 
 .modal-overlay.active {
@@ -32,6 +48,11 @@
     border-radius: var(--radius-lg);
     width: 100%;
     max-width: 520px;
+    max-height: calc(100vh - 40px);
+    max-height: calc(100dvh - 40px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
     padding: 28px 30px;
     box-shadow: 0 24px 60px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(0, 240, 255, 0.1);
     position: relative;

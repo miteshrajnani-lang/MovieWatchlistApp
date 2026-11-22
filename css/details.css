@@ -10,6 +10,8 @@
     max-width: 880px;
     max-height: 90vh;
     overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
     position: relative;
     box-shadow: 0 24px 60px rgba(0, 0, 0, 0.8), 0 0 1px rgba(255, 255, 255, 0.15), 0 0 35px rgba(0, 240, 255, 0.06);
     animation: modalTheatricalIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
