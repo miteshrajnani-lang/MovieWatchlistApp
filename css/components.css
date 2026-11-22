@@ -63,6 +63,7 @@
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid rgba(255, 255, 255, 0.06);
     border-radius: var(--radius-sm);
+    min-width: 0;
 }
 
 .modal-movie-preview img {
@@ -71,15 +72,26 @@
     object-fit: cover;
     border-radius: 4px;
     border: 1px solid rgba(255, 255, 255, 0.1);
+    flex-shrink: 0;
 }
 
+.modal-movie-preview > div,
+.modal-movie-preview-info {
+    min-width: 0;
+    flex: 1;
+}
+
+.modal-movie-preview h4,
 .modal-movie-preview-info h4 {
     color: #fff;
     font-family: var(--font-heading);
     font-size: 0.95rem;
     letter-spacing: 0.02em;
+    overflow-wrap: break-word;
+    word-break: break-word;
 }
 
+.modal-movie-preview div,
 .modal-movie-preview-info div {
     font-size: 0.8rem;
     color: var(--text-muted);
@@ -89,6 +101,7 @@
 .modal-footer-actions {
     display: flex;
     justify-content: flex-end;
+    flex-wrap: wrap;
     gap: 10px;
     margin-top: 24px;
 }

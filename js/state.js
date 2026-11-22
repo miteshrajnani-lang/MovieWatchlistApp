@@ -18,7 +18,8 @@ const state = {
     deletingMovieId: null,
     minRating: 0,
     releaseDecade: 'ALL',
-    discoverSort: 'default'
+    discoverSort: 'default',
+    filtersExpanded: false
 };
 
 // Global Exposure
