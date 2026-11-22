@@ -19,7 +19,9 @@ const state = {
     minRating: 0,
     releaseDecade: 'ALL',
     discoverSort: 'default',
-    filtersExpanded: false
+    filtersExpanded: false,
+    discoverPage: 1,
+    discoverTotalPages: 1
 };
 
 // Global Exposure

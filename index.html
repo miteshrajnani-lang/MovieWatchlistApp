@@ -48,7 +48,7 @@
                     <i class="fa-solid fa-compass"></i> Discover
                 </button>
                 <button class="nav-btn" data-view="watchlist-view">
-                    <i class="fa-solid fa-bookmark"></i> My Watchlist <span class="watchlist-count">(<span
+                    <i class="fa-solid fa-bookmark"></i> Watchlist <span class="watchlist-count">(<span
                             id="navWatchlistCount">0</span>)</span>
                 </button>
                 <button class="nav-btn" data-view="stats-view">
@@ -89,6 +89,13 @@
                             <span class="results-count-badge" id="discoverResultsCount"></span>
                         </div>
                         <div class="movie-grid" id="discoverGrid"></div>
+                        <div style="display: flex; justify-content: center; padding: 24px 0 8px;">
+                            <button id="discoverLoadMoreBtn" class="cyber-btn cyber-btn-cyan"
+                                onclick="loadMoreDiscoverMovies()"
+                                style="display: none; align-items: center; gap: 8px; min-width: 160px; justify-content: center;">
+                                <i class="fa-solid fa-chevron-down"></i> Load More
+                            </button>
+                        </div>
                     </div>
                 </div>
             </section>

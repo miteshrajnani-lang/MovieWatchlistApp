@@ -7,38 +7,9 @@ function renderDiscoverGrid() {
     if (!grid) return;
     grid.innerHTML = '';
 
-    let moviesToDisplay = [...state.discoverMovies];
-
-    if (state.activeGenre !== 'ALL') {
-        moviesToDisplay = moviesToDisplay.filter(m => m.genres && m.genres.includes(state.activeGenre));
-    }
-
-    if (state.minRating > 0) {
-        moviesToDisplay = moviesToDisplay.filter(m => m.vote_average >= state.minRating);
-    }
-
-    if (state.releaseDecade !== 'ALL') {
-        moviesToDisplay = moviesToDisplay.filter(m => {
-            const year = parseInt((m.release_date || '').split('-')[0]);
-            if (!year) return false;
-            if (state.releaseDecade === '2020s') return year >= 2020;
-            if (state.releaseDecade === '2010s') return year >= 2010 && year < 2020;
-            if (state.releaseDecade === '2000s') return year >= 2000 && year < 2010;
-            if (state.releaseDecade === '1990s') return year >= 1990 && year < 2000;
-            if (state.releaseDecade === 'Older') return year < 1990;
-            return true;
-        });
-    }
-
-    if (state.discoverSort === 'rating') {
-        moviesToDisplay.sort((a, b) => b.vote_average - a.vote_average);
-    } else if (state.discoverSort === 'newest') {
-        moviesToDisplay.sort((a, b) => new Date(b.release_date || 0) - new Date(a.release_date || 0));
-    } else if (state.discoverSort === 'oldest') {
-        moviesToDisplay.sort((a, b) => new Date(a.release_date || 0) - new Date(b.release_date || 0));
-    } else if (state.discoverSort === 'title') {
-        moviesToDisplay.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
-    }
+    // state.discoverMovies is already filtered and sorted by loadDiscoverMovies() / ApiService.
+    // No in-memory re-filtering needed here.
+    const moviesToDisplay = state.discoverMovies || [];
 
     const countBadge = document.getElementById('discoverResultsCount');
     if (countBadge) {
@@ -66,25 +37,25 @@ function renderDiscoverGrid() {
 function setGenreFilter(genre) {
     state.activeGenre = genre;
     renderAdvancedFilters();
-    renderDiscoverGrid();
+    loadDiscoverMovies();
 }
 
 function setMinRating(rating) {
     state.minRating = rating;
     renderAdvancedFilters();
-    renderDiscoverGrid();
+    loadDiscoverMovies();
 }
 
 function setReleaseDecade(decade) {
     state.releaseDecade = decade;
     renderAdvancedFilters();
-    renderDiscoverGrid();
+    loadDiscoverMovies();
 }
 
 function setDiscoverSort(sort) {
     state.discoverSort = sort;
     renderAdvancedFilters();
-    renderDiscoverGrid();
+    loadDiscoverMovies();
 }
 
 function resetDiscoverFilters() {
@@ -92,8 +63,7 @@ function resetDiscoverFilters() {
     state.minRating = 0;
     state.releaseDecade = 'ALL';
     state.discoverSort = 'default';
-    renderAdvancedFilters();
-    renderDiscoverGrid();
+    loadInitialDiscoverMovies();
 }
 
 function toggleDiscoverFilters() {
