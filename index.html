@@ -57,7 +57,29 @@
             </nav>
 
             <div class="header-actions">
+                <!-- Desktop: injected by updateUserHeaderUI() -->
                 <div class="user-badge-container" id="userBadgeContainer"></div>
+
+                <!-- Mobile-only: compact profile dropdown -->
+                <div class="mobile-profile-wrap" id="mobileProfileWrap" aria-hidden="true">
+                    <button class="mobile-profile-btn" id="mobileProfileBtn"
+                            aria-haspopup="true" aria-expanded="false"
+                            aria-controls="mobileProfileDropdown">
+                        <i class="fa-solid fa-circle-user"></i>
+                        <span>Profile</span>
+                        <i class="fa-solid fa-chevron-down mobile-chevron"></i>
+                    </button>
+                    <div class="mobile-profile-dropdown" id="mobileProfileDropdown" role="menu" hidden>
+                        <div class="mpd-user-row">
+                            <i class="fa-solid fa-circle-user mpd-user-icon"></i>
+                            <span class="mpd-username" id="mobileProfileUsername"></span>
+                        </div>
+                        <div class="mpd-divider"></div>
+                        <button class="mpd-signout-btn" role="menuitem" onclick="handleLogout()">
+                            <i class="fa-solid fa-right-from-bracket"></i> Sign Out
+                        </button>
+                    </div>
+                </div>
             </div>
         </header>
 
@@ -414,6 +436,73 @@
     <script src="js/api.js"></script>
     <script src="js/events.js"></script>
     <script src="js/app.js"></script>
+
+    <script>
+    /* ── Mobile profile dropdown ───────────────────────────────────────────
+       Lightweight controller for the mobile-only #mobileProfileBtn dropdown.
+       Hooks into the existing updateUserHeaderUI() call so the mobile button
+       always reflects the current auth state without duplicating any logic.
+    ─────────────────────────────────────────────────────────────────────── */
+    (function () {
+        const wrap      = document.getElementById('mobileProfileWrap');
+        const btn       = document.getElementById('mobileProfileBtn');
+        const dropdown  = document.getElementById('mobileProfileDropdown');
+        const usernameEl = document.getElementById('mobileProfileUsername');
+
+        if (!btn || !dropdown) return;
+
+        // Toggle open/close
+        btn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            const isOpen = !dropdown.hidden;
+            dropdown.hidden = isOpen;
+            btn.setAttribute('aria-expanded', String(!isOpen));
+            btn.classList.toggle('mpb-open', !isOpen);
+        });
+
+        // Close on outside click / touch
+        document.addEventListener('click', function () {
+            dropdown.hidden = true;
+            btn.setAttribute('aria-expanded', 'false');
+            btn.classList.remove('mpb-open');
+        });
+
+        // Close after sign-out button tap (dropdown closes naturally as page resets)
+        dropdown.addEventListener('click', function (e) {
+            e.stopPropagation();
+        });
+
+        // Sync the mobile button whenever updateUserHeaderUI() runs.
+        // We patch the global without replacing it.
+        const _original = window.updateUserHeaderUI;
+        window.updateUserHeaderUI = function () {
+            if (_original) _original.apply(this, arguments);
+            syncMobileProfileBtn();
+        };
+
+        function syncMobileProfileBtn() {
+            const user = window.state && window.state.currentUser;
+            if (user) {
+                usernameEl.textContent = user;
+                wrap.removeAttribute('aria-hidden');
+                // Signal auth state via body class — CSS media queries handle
+                // which elements are visible at which viewport width.
+                document.body.classList.add('is-logged-in');
+                // Ensure dropdown closes on re-sync (e.g. after login)
+                dropdown.hidden = true;
+                btn.setAttribute('aria-expanded', 'false');
+                btn.classList.remove('mpb-open');
+            } else {
+                wrap.setAttribute('aria-hidden', 'true');
+                document.body.classList.remove('is-logged-in');
+                dropdown.hidden = true;
+            }
+        }
+
+        // Run once on load in case updateUserHeaderUI already fired
+        syncMobileProfileBtn();
+    })();
+    </script>
 </body>
 
 </html>

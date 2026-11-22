@@ -3,6 +3,11 @@
    Cyberpunk Aesthetics + Modern Touch Usability
    ========================================================================== */
 
+/* Mobile-profile wrap is a mobile-only element; hide it on larger screens */
+.mobile-profile-wrap {
+    display: none;
+}
+
 /* ─── Large Tablets & Small Desktops (<= 960px) ────────────────────────── */
 @media (max-width: 960px) {
     .discover-layout {
@@ -27,34 +32,173 @@
         padding: 0 16px 40px 16px;
     }
 
-    /* 1. Header & Navigation */
+    /* 1. Header & Navigation
+       Layout (flex-wrap, 3 children):
+         Row 1: .brand-logo (order 1, left)  |  .header-actions (order 2, right)
+         Row 2: .cyber-nav  (order 3, full-width)
+    */
     .cyber-header {
         display: flex;
         flex-wrap: wrap;
         justify-content: space-between;
         align-items: center;
-        gap: 12px;
-        padding: 14px 0;
-        margin-bottom: 20px;
+        gap: 6px;
+        padding: 10px 0;
+        margin-bottom: 12px;
     }
 
+    /* Logo — left side of row 1 */
     .brand-logo {
         order: 1;
+        flex: 0 0 auto;
         justify-content: flex-start;
     }
 
     .logo-text {
-        font-size: 1.35rem;
+        font-size: 1.28rem;
     }
 
+    /* Account section — right side of row 1 */
     .header-actions {
         order: 2;
-        width: auto;
+        flex: 0 0 auto;
         display: flex;
         align-items: center;
         justify-content: flex-end;
+        position: relative;   /* dropdown anchor */
     }
 
+    /* On mobile:
+       When logged in (body.is-logged-in):
+         - show .mobile-profile-wrap
+         - hide #userBadgeContainer (desktop account badge)
+       When logged out:
+         - hide .mobile-profile-wrap
+         - show #userBadgeContainer (Sign In button)
+    */
+    .mobile-profile-wrap {
+        display: none;
+        position: relative;
+    }
+
+    body.is-logged-in .mobile-profile-wrap {
+        display: block;
+    }
+
+    body.is-logged-in #userBadgeContainer {
+        display: none;
+    }
+
+    .mobile-profile-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        background: rgba(0, 240, 255, 0.07);
+        border: 1px solid rgba(0, 240, 255, 0.28);
+        border-radius: var(--radius-sm);
+        color: var(--primary-cyan);
+        font-family: var(--font-heading);
+        font-size: 0.72rem;
+        letter-spacing: 0.4px;
+        padding: 6px 10px;
+        cursor: pointer;
+        transition: background 0.2s, border-color 0.2s;
+        white-space: nowrap;
+    }
+
+    .mobile-profile-btn:hover,
+    .mobile-profile-btn.mpb-open {
+        background: rgba(0, 240, 255, 0.13);
+        border-color: rgba(0, 240, 255, 0.5);
+    }
+
+    .mobile-profile-btn > i:first-child {
+        font-size: 0.95rem;
+    }
+
+    .mobile-chevron {
+        font-size: 0.6rem;
+        transition: transform 0.2s;
+    }
+
+    .mobile-profile-btn.mpb-open .mobile-chevron {
+        transform: rotate(180deg);
+    }
+
+    /* ── Mobile profile dropdown ────────────────────────── */
+    .mobile-profile-dropdown {
+        position: absolute;
+        top: calc(100% + 6px);
+        right: 0;
+        min-width: 170px;
+        background: rgba(13, 16, 25, 0.97);
+        border: 1px solid rgba(0, 240, 255, 0.25);
+        border-radius: var(--radius-md);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), 0 0 12px rgba(0, 240, 255, 0.08);
+        z-index: 999;
+        overflow: hidden;
+    }
+
+    .mobile-profile-dropdown[hidden] {
+        display: none;
+    }
+
+    .mpd-user-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 14px 8px;
+        color: var(--text-main);
+        font-family: var(--font-heading);
+        font-size: 0.75rem;
+    }
+
+    .mpd-user-icon {
+        color: var(--primary-cyan);
+        font-size: 1rem;
+        flex-shrink: 0;
+    }
+
+    .mpd-username {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        max-width: 120px;
+    }
+
+    .mpd-divider {
+        height: 1px;
+        background: rgba(255, 255, 255, 0.07);
+        margin: 0 10px;
+    }
+
+    .mpd-signout-btn {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        width: 100%;
+        padding: 10px 14px;
+        background: transparent;
+        border: none;
+        color: var(--text-muted);
+        font-family: var(--font-heading);
+        font-size: 0.74rem;
+        cursor: pointer;
+        transition: color 0.15s, background 0.15s;
+        text-align: left;
+    }
+
+    .mpd-signout-btn:hover {
+        color: var(--glitch-pink);
+        background: rgba(255, 0, 127, 0.08);
+    }
+
+    .auth-btn-trigger {
+        padding: 7px 12px;
+        font-size: 0.75rem;
+    }
+
+    /* Nav — full-width row 2 */
     .cyber-nav {
         order: 3;
         display: grid;
@@ -73,7 +217,7 @@
         justify-content: center;
         align-items: center;
         font-size: 0.74rem;
-        padding: 8px 6px;
+        padding: 7px 6px;
         gap: 6px;
         letter-spacing: 0.2px;
         white-space: nowrap;
@@ -530,6 +674,12 @@
     }
 
     /* Header & Navigation */
+    .cyber-header {
+        gap: 6px;
+        padding: 8px 0;
+        margin-bottom: 12px;
+    }
+
     .logo-text {
         font-size: 1.18rem;
         letter-spacing: 0.8px;
@@ -541,13 +691,17 @@
         font-size: 15px;
     }
 
+    .user-profile-badge span {
+        max-width: 90px;
+    }
+
     .cyber-nav {
         gap: 3px;
         padding: 3px;
     }
 
     .nav-btn {
-        padding: 7px 3px;
+        padding: 6px 3px;
         font-size: 0.67rem;
         gap: 4px;
         letter-spacing: 0;
@@ -979,6 +1133,12 @@
         padding: 0 8px 24px 8px;
     }
 
+    .cyber-header {
+        gap: 5px;
+        padding: 7px 0;
+        margin-bottom: 10px;
+    }
+
     .logo-text {
         font-size: 1.08rem;
         letter-spacing: 0.5px;
@@ -996,8 +1156,12 @@
     }
 
     .user-profile-badge {
-        padding: 4px 8px;
+        padding: 3px 8px;
         font-size: 0.72rem;
+    }
+
+    .user-profile-badge span {
+        max-width: 70px;
     }
 
     .cyber-nav {
