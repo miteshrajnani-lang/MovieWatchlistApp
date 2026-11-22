@@ -86,6 +86,11 @@
         margin-bottom: 20px;
     }
 
+    .hero-section-compact {
+        padding: 16px 18px;
+        margin-bottom: 16px;
+    }
+
     .hero-title {
         font-size: 1.35rem;
         line-height: 1.3;
@@ -99,6 +104,10 @@
         font-size: 0.85rem;
         line-height: 1.45;
         margin-bottom: 16px;
+    }
+
+    .hero-section-compact .hero-subtitle {
+        margin-bottom: 12px;
     }
 
     .search-box-wrapper {
@@ -345,8 +354,9 @@
         flex: 1;
         min-width: 0;
         width: 100%;
-        height: 38px;
-        font-size: 0.8rem;
+        height: 44px;
+        font-size: 0.84rem;
+        padding: 0 12px;
     }
 
     /* 4. Movie Grid & Cards */
@@ -557,18 +567,30 @@
         margin-bottom: 16px;
     }
 
+    .hero-section-compact {
+        padding: 14px 12px;
+        margin-bottom: 12px;
+    }
+
     .hero-title {
         font-size: 1.15rem;
     }
 
     .hero-title-sm {
-        font-size: 1.05rem;
+        font-size: 1.12rem;
+        margin-bottom: 3px;
     }
 
     .hero-subtitle {
         font-size: 0.8rem;
         line-height: 1.4;
         margin-bottom: 12px;
+    }
+
+    .hero-section-compact .hero-subtitle {
+        font-size: 0.78rem;
+        line-height: 1.35;
+        margin-bottom: 10px;
     }
 
     .search-box-wrapper {
@@ -579,6 +601,27 @@
         height: 42px;
         padding: 0 12px 0 36px;
         font-size: 0.82rem;
+        text-overflow: ellipsis;
+    }
+
+    .search-input-group .cyber-input::placeholder {
+        text-overflow: ellipsis;
+        font-size: 0.76rem;
+    }
+
+    #watchlistLocalSearch {
+        height: 40px;
+        font-size: 0.79rem;
+        padding: 0 10px 0 32px;
+    }
+
+    #watchlistLocalSearch::placeholder {
+        font-size: 0.74rem;
+    }
+
+    .hero-section-compact .search-icon {
+        left: 10px;
+        font-size: 0.8rem;
     }
 
     .search-icon {
@@ -637,30 +680,39 @@
     /* Watchlist Filter Grid (2x2) */
     .filter-group {
         display: grid;
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: repeat(2, 1fr);
         gap: 6px;
+        width: 100%;
     }
 
     .filter-group .filter-badge {
-        padding: 7px 6px;
-        font-size: 0.72rem;
-        min-height: 36px;
+        padding: 6px 8px;
+        font-size: 0.73rem;
+        min-height: 38px;
         white-space: nowrap;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        border-radius: var(--radius-sm);
+        letter-spacing: 0.2px;
     }
 
     .sort-control-group {
         flex-direction: column;
         align-items: stretch;
-        gap: 4px;
+        gap: 5px;
     }
 
     .sort-control-group .sort-label {
-        font-size: 0.7rem;
+        font-size: 0.72rem;
+        color: var(--text-muted);
     }
 
     .sort-control-group .cyber-select {
-        height: 38px;
-        font-size: 0.78rem;
+        height: 44px;
+        font-size: 0.84rem;
+        padding: 0 12px;
     }
 
     /* Movie Grid & Compact Cards */
@@ -670,18 +722,32 @@
         margin-bottom: 20px;
     }
 
+    .movie-card {
+        border-radius: var(--radius-sm);
+    }
+
     .movie-card .movie-info {
-        padding: 8px;
+        padding: 8px 8px 8px 8px;
     }
 
     .movie-card .movie-title {
-        font-size: 0.84rem;
-        margin-bottom: 4px;
+        font-size: 0.82rem;
+        line-height: 1.25;
+        min-height: 2.5em;
+        margin-bottom: 3px;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        word-break: break-word;
+        overflow-wrap: break-word;
     }
 
     .movie-card .movie-meta {
-        font-size: 0.7rem;
-        margin-bottom: 6px;
+        font-size: 0.68rem;
+        margin-bottom: 5px;
+        gap: 4px;
+        color: #94a3b8;
     }
 
     .movie-card .genre-tags {
@@ -691,35 +757,89 @@
 
     .movie-card .genre-tag {
         font-size: 0.62rem;
-        padding: 2px 4px;
+        padding: 1px 5px;
+        border-radius: 2px;
+    }
+
+    .personal-review-box {
+        margin-top: auto;
+        padding: 5px 6px;
+        margin-bottom: 6px;
+        border-radius: 4px;
+    }
+
+    .personal-stars {
+        font-size: 0.72rem;
+        letter-spacing: 0.5px;
+        margin-bottom: 2px;
+    }
+
+    .personal-notes {
+        font-size: 0.68rem;
+        line-height: 1.3;
+        -webkit-line-clamp: 2;
     }
 
     .movie-card .card-actions {
+        display: flex;
         gap: 4px;
+        margin-top: auto;
+        width: 100%;
     }
 
-    .btn-icon {
-        height: 30px;
-        font-size: 0.68rem;
-        padding: 0 4px;
+    .personal-review-box + .card-actions {
+        margin-top: 0;
     }
 
-    .btn-icon i {
-        font-size: 0.7rem;
+    .movie-card .btn-icon {
+        flex: 1 1 0;
+        min-width: 0;
+        height: 29px;
+        font-size: 0.65rem;
+        padding: 0 3px;
+        gap: 3px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        border-radius: var(--radius-sm);
+        box-sizing: border-box;
+    }
+
+    .movie-card .btn-icon i {
+        font-size: 0.58rem;
+        flex-shrink: 0;
+        line-height: 1;
     }
 
     .status-badge {
-        font-size: 0.62rem;
-        padding: 2px 6px;
+        font-size: 0.60rem;
+        padding: 2px 5px;
         top: 6px;
         left: 6px;
+        max-width: calc(100% - 12px);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        letter-spacing: 0.3px;
+    }
+
+    .status-badge::before {
+        width: 4px;
+        height: 4px;
+        flex-shrink: 0;
     }
 
     .tmdb-rating {
-        font-size: 0.65rem;
+        font-size: 0.62rem;
         padding: 2px 5px;
-        top: 6px;
+        top: auto;
+        bottom: 6px;
         right: 6px;
+        letter-spacing: 0.2px;
     }
 
     .personal-review-box {
@@ -904,6 +1024,36 @@
         font-size: 1.05rem;
     }
 
+    .hero-section-compact {
+        padding: 10px 8px;
+        margin-bottom: 10px;
+    }
+
+    .hero-section-compact .hero-title-sm {
+        font-size: 1.02rem;
+        margin-bottom: 2px;
+    }
+
+    .hero-section-compact .hero-subtitle {
+        font-size: 0.73rem;
+        margin-bottom: 8px;
+    }
+
+    #watchlistLocalSearch {
+        height: 38px;
+        font-size: 0.74rem;
+        padding: 0 8px 0 28px;
+    }
+
+    #watchlistLocalSearch::placeholder {
+        font-size: 0.69rem;
+    }
+
+    .hero-section-compact .search-icon {
+        left: 8px;
+        font-size: 0.75rem;
+    }
+
     .mobile-filter-toggle {
         height: 40px;
         font-size: 0.72rem;
@@ -921,7 +1071,88 @@
     }
 
     .filter-group {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 5px;
+    }
+
+    .filter-group .filter-badge {
+        padding: 6px 4px;
+        font-size: 0.68rem;
+        min-height: 36px;
+    }
+
+    .sort-control-group .cyber-select {
+        height: 42px;
+        font-size: 0.80rem;
+        padding: 0 10px;
+    }
+
+    .movie-grid {
+        gap: 6px;
+    }
+
+    .movie-card .movie-info {
+        padding: 7px 6px 6px 6px;
+    }
+
+    .movie-card .movie-title {
+        font-size: 0.78rem;
+        line-height: 1.25;
+        min-height: 2.5em;
+        margin-bottom: 2px;
+    }
+
+    .movie-card .movie-meta {
+        font-size: 0.64rem;
+        gap: 3px;
+        margin-bottom: 4px;
+    }
+
+    .movie-card .genre-tag {
+        font-size: 0.58rem;
+        padding: 1px 4px;
+    }
+
+    .personal-review-box {
+        padding: 4px 5px;
+        margin-bottom: 5px;
+    }
+
+    .personal-stars {
+        font-size: 0.68rem;
+    }
+
+    .personal-notes {
+        font-size: 0.64rem;
+    }
+
+    .movie-card .card-actions {
+        gap: 3px;
+    }
+
+    .movie-card .btn-icon {
+        height: 28px;
+        font-size: 0.62rem;
+        padding: 0 2px;
+        gap: 2.5px;
+    }
+
+    .movie-card .btn-icon i {
+        font-size: 0.55rem;
+    }
+
+    .status-badge {
+        font-size: 0.56rem;
+        padding: 1px 4px;
+        top: 4px;
+        left: 4px;
+    }
+
+    .tmdb-rating {
+        font-size: 0.58rem;
+        padding: 1px 4px;
+        bottom: 4px;
+        right: 4px;
     }
 
     .modal-overlay {
@@ -930,5 +1161,30 @@
 
     .cyber-modal {
         padding: 14px 10px;
+    }
+}
+
+/* ─── Very Narrow Mobile Fallback (<= 330px) ────────────────────────── */
+@media (max-width: 330px) {
+    .movie-card .card-actions {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 3px;
+    }
+
+    /* In cards with 3 buttons (Details, Edit, Delete), Details spans full width */
+    .movie-card .card-actions button:first-child:nth-last-child(3) {
+        grid-column: 1 / -1;
+    }
+
+    .movie-card .btn-icon {
+        height: 27px;
+        font-size: 0.63rem;
+        padding: 0 4px;
+        gap: 3px;
+    }
+
+    .movie-card .btn-icon i {
+        font-size: 0.56rem;
     }
 }
