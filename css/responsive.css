@@ -545,11 +545,83 @@
 
     .stat-journal-item,
     .stat-card {
-        padding: 16px 14px;
+        padding: 14px 12px;
     }
 
     .stat-number {
-        font-size: 1.6rem;
+        font-size: 1.5rem;
+    }
+
+    .stat-label {
+        font-size: 0.75rem;
+    }
+
+    /* Watch Status cards */
+    .status-legend-grid {
+        gap: 8px;
+    }
+
+    .status-legend-item {
+        padding: 10px 12px;
+    }
+
+    .status-legend-val {
+        font-size: 1rem;
+    }
+
+    /* Genre distribution */
+    .genre-dist-list {
+        gap: 10px;
+    }
+
+    /* Highest Rated Showcase Header */
+    #highestRatedPanel .stat-panel-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+        margin-bottom: 16px;
+        padding-bottom: 10px;
+    }
+
+    #highestRatedPanel .stat-panel-title {
+        font-size: 0.95rem;
+        line-height: 1.3;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    #highestRatedPanel .stat-panel-title i {
+        flex-shrink: 0;
+    }
+
+    #highestRatedPanel .stat-panel-subtitle {
+        font-size: 0.68rem;
+        font-family: monospace;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    /* Highest Rated cards */
+    .highest-rated-card {
+        padding: 10px 12px;
+        gap: 10px;
+    }
+
+    .highest-rated-thumb {
+        width: 44px;
+        height: 66px;
+    }
+
+    .highest-rated-title {
+        font-size: 0.82rem;
+    }
+
+    .highest-rated-meta {
+        font-size: 0.7rem;
+        gap: 6px;
+        flex-wrap: wrap;
     }
 
     /* 6. Modals (Add to Watchlist, Auth, Details) */
@@ -563,7 +635,7 @@
         max-width: 460px;
         max-height: calc(100vh - 24px);
         max-height: calc(100dvh - 24px);
-        padding: 20px 16px;
+        padding: 20px 16px 28px;
         margin: auto;
         border-radius: var(--radius-md);
         box-sizing: border-box;
@@ -593,20 +665,27 @@
 
     .modal-footer-actions {
         display: flex;
-        gap: 10px;
-        margin-top: 18px;
+        flex-direction: column-reverse;
+        align-items: center;
+        justify-content: center;
+        gap: 11px;
+        margin-top: 20px;
         width: 100%;
+        padding-bottom: 8px;
     }
 
     .modal-footer-actions .cyber-btn {
-        flex: 1;
-        min-width: 0;
-        padding: 0 12px;
-        font-size: 0.78rem;
-        height: 44px;
+        width: 88%;
+        max-width: 380px;
+        padding: 0 16px;
+        font-size: 0.82rem;
+        height: 50px;
+        display: inline-flex;
+        align-items: center;
         justify-content: center;
         text-align: center;
         white-space: nowrap;
+        box-sizing: border-box;
     }
 
     /* Movie Detail Modal */
@@ -835,31 +914,31 @@
     .filter-group {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
-        gap: 6px;
+        gap: 5px;
         width: 100%;
     }
 
     .filter-group .filter-badge {
-        padding: 6px 8px;
-        font-size: 0.73rem;
-        min-height: 38px;
+        padding: 5px 6px;
+        font-size: 0.72rem;
+        min-height: 34px;
         white-space: nowrap;
         display: flex;
         align-items: center;
         justify-content: center;
         text-align: center;
         border-radius: var(--radius-sm);
-        letter-spacing: 0.2px;
+        letter-spacing: 0.1px;
     }
 
     .sort-control-group {
         flex-direction: column;
         align-items: stretch;
-        gap: 5px;
+        gap: 4px;
     }
 
     .sort-control-group .sort-label {
-        font-size: 0.72rem;
+        font-size: 0.74rem;
         color: var(--text-muted);
     }
 
@@ -1014,13 +1093,14 @@
         font-size: 1.05rem;
     }
 
+    /* Keep 2×2 grid on 480px — only fall to single col at 360px */
     .stats-journal-ledger {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, 1fr);
     }
 
     .stat-journal-item,
     .stat-card {
-        padding: 14px 12px;
+        padding: 12px 10px;
         border-right: none;
         border-bottom: 1px solid rgba(255, 255, 255, 0.06);
     }
@@ -1031,11 +1111,85 @@
     }
 
     .stat-number {
-        font-size: 1.4rem;
+        font-size: 1.35rem;
     }
 
+    /* Restore right border for items in left column of 2×2 grid */
+    .stat-journal-item:nth-child(odd),
+    .stat-card:nth-child(odd) {
+        border-right: 1px solid rgba(255, 255, 255, 0.06);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .stat-journal-item:nth-last-child(-n+2),
+    .stat-card:nth-last-child(-n+2) {
+        border-bottom: none;
+    }
+
+    /* Watch Status */
     .status-legend-grid {
         grid-template-columns: 1fr;
+        gap: 6px;
+    }
+
+    .status-legend-item {
+        padding: 8px 12px;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .status-legend-label {
+        font-size: 0.72rem;
+    }
+
+    .status-legend-val {
+        font-size: 1rem;
+    }
+
+    /* Highest Rated */
+    #highestRatedPanel .stat-panel-header {
+        gap: 5px;
+        margin-bottom: 14px;
+        padding-bottom: 8px;
+    }
+
+    #highestRatedPanel .stat-panel-title {
+        font-size: 0.9rem;
+    }
+
+    #highestRatedPanel .stat-panel-subtitle {
+        font-size: 0.65rem;
+    }
+
+    .highest-rated-grid {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+
+    .highest-rated-card {
+        padding: 9px 11px;
+        gap: 10px;
+    }
+
+    .highest-rated-thumb {
+        width: 42px;
+        height: 63px;
+    }
+
+    .highest-rated-title {
+        font-size: 0.8rem;
+        white-space: normal;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        display: -webkit-box;
+        overflow: hidden;
+    }
+
+    .highest-rated-meta {
+        font-size: 0.68rem;
+        gap: 5px;
+        flex-wrap: wrap;
     }
 
     /* Modals */
@@ -1044,7 +1198,7 @@
     }
 
     .cyber-modal {
-        padding: 16px 12px;
+        padding: 18px 14px 26px;
         max-width: 100%;
         max-height: calc(100vh - 16px);
         max-height: calc(100dvh - 16px);
@@ -1082,16 +1236,28 @@
     }
 
     .modal-footer-actions {
+        display: flex;
         flex-direction: column-reverse;
-        gap: 8px;
-        margin-top: 14px;
+        align-items: center;
+        justify-content: center;
+        gap: 11px;
+        margin-top: 18px;
+        width: 100%;
+        padding-bottom: 6px;
     }
 
     .modal-footer-actions .cyber-btn {
-        width: 100%;
-        height: 44px;
-        font-size: 0.8rem;
+        width: 88%;
+        max-width: 350px;
+        height: 50px;
+        font-size: 0.82rem;
         padding: 0 14px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        white-space: nowrap;
+        box-sizing: border-box;
     }
 
     /* Movie Detail Modal */
@@ -1324,7 +1490,60 @@
     }
 
     .cyber-modal {
-        padding: 14px 10px;
+        padding: 16px 10px 22px;
+    }
+
+    .modal-footer-actions {
+        gap: 10px;
+        margin-top: 14px;
+        padding-bottom: 4px;
+    }
+
+    .modal-footer-actions .cyber-btn {
+        width: 88%;
+        max-width: 300px;
+        height: 50px;
+        font-size: 0.78rem;
+        padding: 0 10px;
+    }
+
+    /* Stats — single column at 360px since cards are very narrow */
+    .stats-journal-ledger {
+        grid-template-columns: 1fr;
+    }
+
+    #highestRatedPanel .stat-panel-title {
+        font-size: 0.84rem;
+    }
+
+    #highestRatedPanel .stat-panel-subtitle {
+        font-size: 0.62rem;
+    }
+
+    .stat-journal-item,
+    .stat-card {
+        border-right: none;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .stat-journal-item:nth-child(odd),
+    .stat-card:nth-child(odd) {
+        border-right: none;
+    }
+
+    .stat-journal-item:last-child,
+    .stat-card:last-child {
+        border-bottom: none;
+    }
+
+    .stat-journal-item:nth-last-child(-n+2),
+    .stat-card:nth-last-child(-n+2) {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .stat-journal-item:last-child,
+    .stat-card:last-child {
+        border-bottom: none;
     }
 }
 
