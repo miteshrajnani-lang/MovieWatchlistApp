@@ -16,13 +16,17 @@ const ApiService = {
         return { results: this.formatResults(data.results || []), total_pages: data.total_pages || 1 };
     },
 
-    async search(apiKey, query) {
+    async search(apiKey, query, page = 1) {
         const baseUrl = (window.CONFIG && window.CONFIG.TMDB_BASE_URL) || 'https://api.themoviedb.org/3';
-        const url = `${baseUrl}/search/movie?api_key=${apiKey}&query=${encodeURIComponent(query)}&language=en-US&page=1`;
+        const url = `${baseUrl}/search/movie?api_key=${apiKey}&query=${encodeURIComponent(query)}&language=en-US&page=${page}`;
         const response = await fetch(url);
         if (!response.ok) throw new Error('Search Request Failed');
         const data = await response.json();
-        return this.formatResults(data.results || []);
+        return {
+            results: this.formatResults(data.results || []),
+            total_pages: data.total_pages || 1,
+            total_results: data.total_results || 0
+        };
     },
 
     /**
@@ -224,6 +228,8 @@ async function enrichDiscoverRuntimes() {
 }
 
 async function loadInitialDiscoverMovies() {
+    state.searchQuery = '';
+    state.searchResults = [];
     state.activeGenre = 'ALL';
     state.minRating = 0;
     state.releaseDecade = 'ALL';
@@ -239,6 +245,13 @@ async function loadInitialDiscoverMovies() {
  * Called by filter setters and initial load.
  */
 async function loadDiscoverMovies() {
+    state.searchQuery = '';
+    state.searchResults = [];
+    const searchInput = document.getElementById('tmdbSearchInput');
+    if (searchInput && searchInput.value) {
+        searchInput.value = '';
+    }
+
     const grid = document.getElementById('discoverGrid');
     const discoverTitle = document.getElementById('discoverResultsTitle');
     const countBadge = document.getElementById('discoverResultsCount');
@@ -322,37 +335,54 @@ async function loadMoreDiscoverMovies() {
         state.discoverSort === 'default';
 
     try {
-        const { results, total_pages } = isAllDefaults
-            ? await ApiService.fetchPopular(state.apiKey, nextPage)
-            : await ApiService.discover(state.apiKey, {
-                genre: state.activeGenre,
-                minRating: state.minRating,
-                releaseDecade: state.releaseDecade,
-                sort: state.discoverSort
-            }, nextPage);
+        if (state.searchQuery) {
+            const { results, total_pages } = await ApiService.search(state.apiKey, state.searchQuery, nextPage);
+            const existingIds = new Set((state.searchResults || []).map(m => m.id));
+            const newMovies = results.filter(m => !existingIds.has(m.id));
 
-        // Deduplicate by id before appending
-        const existingIds = new Set(state.discoverMovies.map(m => m.id));
-        const newMovies = results.filter(m => !existingIds.has(m.id));
+            state.searchResults = (state.searchResults || []).concat(newMovies);
+            state.discoverPage = nextPage;
+            state.discoverTotalPages = total_pages;
 
-        state.discoverMovies = state.discoverMovies.concat(newMovies);
-        state.discoverPage = nextPage;
-        state.discoverTotalPages = total_pages;
+            state.discoverMovies = typeof applySearchFilters === 'function'
+                ? applySearchFilters(state.searchResults)
+                : state.searchResults;
 
-        // Append new cards to existing grid
-        const grid = document.getElementById('discoverGrid');
-        if (grid) {
-            newMovies.forEach(movie => {
-                const isInWatchlist = state.watchlist.some(w => w.id === movie.id);
-                const card = createDiscoverMovieCard(movie, isInWatchlist);
-                grid.appendChild(card);
-            });
+            renderDiscoverGrid();
+            enrichDiscoverRuntimes();
+        } else {
+            const { results, total_pages } = isAllDefaults
+                ? await ApiService.fetchPopular(state.apiKey, nextPage)
+                : await ApiService.discover(state.apiKey, {
+                    genre: state.activeGenre,
+                    minRating: state.minRating,
+                    releaseDecade: state.releaseDecade,
+                    sort: state.discoverSort
+                }, nextPage);
+
+            // Deduplicate by id before appending
+            const existingIds = new Set(state.discoverMovies.map(m => m.id));
+            const newMovies = results.filter(m => !existingIds.has(m.id));
+
+            state.discoverMovies = state.discoverMovies.concat(newMovies);
+            state.discoverPage = nextPage;
+            state.discoverTotalPages = total_pages;
+
+            // Append new cards to existing grid
+            const grid = document.getElementById('discoverGrid');
+            if (grid) {
+                newMovies.forEach(movie => {
+                    const isInWatchlist = state.watchlist.some(w => w.id === movie.id);
+                    const card = createDiscoverMovieCard(movie, isInWatchlist);
+                    grid.appendChild(card);
+                });
+            }
+
+            const countBadge = document.getElementById('discoverResultsCount');
+            if (countBadge) countBadge.textContent = `${state.discoverMovies.length} titles`;
+
+            enrichDiscoverRuntimes();
         }
-
-        const countBadge = document.getElementById('discoverResultsCount');
-        if (countBadge) countBadge.textContent = `${state.discoverMovies.length} titles`;
-
-        enrichDiscoverRuntimes();
     } catch (err) {
         console.warn('Load More failed:', err);
         showToast('Failed to load more movies. Try again.', 'info');
@@ -373,29 +403,71 @@ function updateLoadMoreButton() {
 async function searchMovies(query) {
     const trimmed = (query || '').trim();
     if (!trimmed) {
-        loadInitialDiscoverMovies();
+        state.searchQuery = '';
+        state.searchResults = [];
+        await loadInitialDiscoverMovies();
         return;
     }
 
+    state.searchQuery = trimmed;
+    state.searchResults = [];
+    state.discoverMovies = [];
     state.discoverPage = 1;
     state.discoverTotalPages = 1;
+
+    // Reset filters to default on new search
+    state.activeGenre = 'ALL';
+    state.minRating = 0;
+    state.releaseDecade = 'ALL';
+    state.discoverSort = 'default';
+    if (typeof renderAdvancedFilters === 'function') {
+        renderAdvancedFilters();
+    }
 
     const discoverTitle = document.getElementById('discoverResultsTitle');
     if (discoverTitle) discoverTitle.textContent = `Search Results for "${trimmed}"`;
 
+    const countBadge = document.getElementById('discoverResultsCount');
+    if (countBadge) countBadge.textContent = '';
+
+    const loadMoreBtn = document.getElementById('discoverLoadMoreBtn');
+    if (loadMoreBtn) loadMoreBtn.style.display = 'none';
+
+    const grid = document.getElementById('discoverGrid');
+    if (grid) {
+        grid.innerHTML = `
+            <div style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: var(--text-muted);">
+                <i class="fa-solid fa-spinner fa-spin" style="font-size: 2rem; color: var(--primary-cyan); margin-bottom: 12px;"></i>
+                <p>Searching movies...</p>
+            </div>
+        `;
+    }
+
     if (state.apiKey) {
         try {
-            state.discoverMovies = await ApiService.search(state.apiKey, trimmed);
+            const { results, total_pages } = await ApiService.search(state.apiKey, trimmed, 1);
+            state.searchResults = results;
+            state.discoverPage = 1;
+            state.discoverTotalPages = total_pages;
+            state.discoverMovies = typeof applySearchFilters === 'function'
+                ? applySearchFilters(state.searchResults)
+                : results;
             if (state.discoverMovies.length === 0) {
                 showToast(`No movies found matching "${trimmed}"`, 'info');
             }
         } catch (err) {
             console.error('TMDB Search Error:', err);
             showToast('Search failed. Check your connection.', 'info');
+            state.searchResults = [];
             state.discoverMovies = [];
+            state.discoverPage = 1;
+            state.discoverTotalPages = 1;
         }
     } else {
+        state.searchResults = [];
         state.discoverMovies = [];
+        state.discoverPage = 1;
+        state.discoverTotalPages = 1;
     }
     renderDiscoverGrid();
     updateLoadMoreButton();

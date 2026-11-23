@@ -34,28 +34,74 @@ function renderDiscoverGrid() {
     });
 }
 
+function applySearchFilters(movies = state.searchResults || []) {
+    let filtered = [...movies];
+
+    if (state.activeGenre !== 'ALL') {
+        filtered = filtered.filter(m => m.genres && m.genres.includes(state.activeGenre));
+    }
+
+    if (state.minRating > 0) {
+        filtered = filtered.filter(m => m.vote_average >= state.minRating);
+    }
+
+    if (state.releaseDecade !== 'ALL') {
+        filtered = filtered.filter(m => {
+            const year = parseInt((m.release_date || '').split('-')[0], 10);
+            if (!year) return false;
+            if (state.releaseDecade === '2020s') return year >= 2020;
+            if (state.releaseDecade === '2010s') return year >= 2010 && year < 2020;
+            if (state.releaseDecade === '2000s') return year >= 2000 && year < 2010;
+            if (state.releaseDecade === '1990s') return year >= 1990 && year < 2000;
+            if (state.releaseDecade === 'Older') return year < 1990;
+            return true;
+        });
+    }
+
+    if (state.discoverSort === 'rating') {
+        filtered.sort((a, b) => b.vote_average - a.vote_average);
+    } else if (state.discoverSort === 'newest') {
+        filtered.sort((a, b) => new Date(b.release_date || 0) - new Date(a.release_date || 0));
+    } else if (state.discoverSort === 'oldest') {
+        filtered.sort((a, b) => new Date(a.release_date || 0) - new Date(b.release_date || 0));
+    } else if (state.discoverSort === 'title') {
+        filtered.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
+    }
+
+    return filtered;
+}
+
+function onFilterApplied() {
+    renderAdvancedFilters();
+    if (state.searchQuery) {
+        state.discoverMovies = applySearchFilters(state.searchResults);
+        renderDiscoverGrid();
+        if (typeof updateLoadMoreButton === 'function') {
+            updateLoadMoreButton();
+        }
+    } else {
+        loadDiscoverMovies();
+    }
+}
+
 function setGenreFilter(genre) {
     state.activeGenre = genre;
-    renderAdvancedFilters();
-    loadDiscoverMovies();
+    onFilterApplied();
 }
 
 function setMinRating(rating) {
     state.minRating = rating;
-    renderAdvancedFilters();
-    loadDiscoverMovies();
+    onFilterApplied();
 }
 
 function setReleaseDecade(decade) {
     state.releaseDecade = decade;
-    renderAdvancedFilters();
-    loadDiscoverMovies();
+    onFilterApplied();
 }
 
 function setDiscoverSort(sort) {
     state.discoverSort = sort;
-    renderAdvancedFilters();
-    loadDiscoverMovies();
+    onFilterApplied();
 }
 
 function resetDiscoverFilters() {
@@ -63,7 +109,16 @@ function resetDiscoverFilters() {
     state.minRating = 0;
     state.releaseDecade = 'ALL';
     state.discoverSort = 'default';
-    loadInitialDiscoverMovies();
+    if (state.searchQuery) {
+        renderAdvancedFilters();
+        state.discoverMovies = applySearchFilters(state.searchResults);
+        renderDiscoverGrid();
+        if (typeof updateLoadMoreButton === 'function') {
+            updateLoadMoreButton();
+        }
+    } else {
+        loadInitialDiscoverMovies();
+    }
 }
 
 function toggleDiscoverFilters() {
@@ -183,6 +238,7 @@ function renderAdvancedFilters() {
 
 // Global Exposure
 window.renderDiscoverGrid = renderDiscoverGrid;
+window.applySearchFilters = applySearchFilters;
 window.setGenreFilter = setGenreFilter;
 window.setMinRating = setMinRating;
 window.setReleaseDecade = setReleaseDecade;

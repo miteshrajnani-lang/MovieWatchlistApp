@@ -11,6 +11,8 @@ const state = {
     apiKey: (window.CONFIG && window.CONFIG.DEFAULT_API_KEY) || '7f631300a2ef07bafe2c64d6214f99c2',
     currentView: 'discover-view',
     discoverMovies: [],
+    searchResults: [],
+    searchQuery: '',
     filterStatus: 'ALL',
     localSearchQuery: '',
     sortBy: 'dateAdded',
